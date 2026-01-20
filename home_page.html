@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RestroFlow</title>
+
+  <style>
+    :root{
+      --primary:#826cd7;
+      --text:#2e2e2e;
+      --muted:#5a5f64;
+      --bg:#fff8f3;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.6;
+    }
+
+    header{
+      background:#fff;
+      border-bottom:1px solid rgba(0,0,0,0.08);
+      position:sticky;
+      top:0;
+    }
+
+    .container{
+      max-width:1000px;
+      margin:auto;
+      padding:16px;
+    }
+
+    nav{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    nav h1{
+      margin:0;
+      color:var(--primary);
+      font-size:1.3rem;
+    }
+
+    nav a{
+      text-decoration:none;
+      color:var(--text);
+      font-weight:600;
+      margin-left:14px;
+    }
+    nav a:hover{ color:var(--primary); }
+    .nav-left{ display:flex; align-items:center; gap:12px; }
+    .nav-right{ display:flex; align-items:center; gap:12px; margin-left:auto; }
+    .nav-links{ display:flex; gap:12px; align-items:center; }
+    .auth{ display:flex; gap:8px; align-items:center; }
+
+    .hamburger{
+      width:40px; height:36px; display:inline-flex; align-items:center; justify-content:center;
+      background:transparent; border:0; cursor:pointer; padding:6px; border-radius:8px;
+    }
+    .hamburger:focus{ outline:2px solid rgba(103,112,179,0.25); }
+    .hamburger .bar{ width:18px; height:2px; background:var(--text); display:block; position:relative; }
+    .hamburger .bar::before, .hamburger .bar::after{ content:''; position:absolute; left:0; right:0; height:2px; background:inherit; }
+    .hamburger .bar::before{ top:-6px; }
+    .hamburger .bar::after{ top:6px; }
+
+    .auth-btn{ padding:8px 12px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); background:#fff; cursor:pointer; font-weight:700; }
+    .auth-btn.primary{ background:var(--primary); color:#fff; border:0; }
+
+    .menu-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.35); opacity:0; pointer-events:none; transition:opacity 160ms ease; }
+    .menu-overlay.show{ opacity:1; pointer-events:auto; }
+    .side-menu{
+      position:fixed; left:0; top:0; height:100%; width:280px; background:#fff; box-shadow:2px 0 16px rgba(0,0,0,0.08);
+      transform:translateX(-110%); transition:transform 200ms ease; padding:20px; z-index:60;
+      display:flex; flex-direction:column; gap:12px;
+    }
+    .side-menu.show{ transform:translateX(0); }
+    .side-menu h3{ margin:0 0 6px 0; color:var(--primary); }
+    .side-menu a{ color:var(--text); text-decoration:none; padding:10px 8px; border-radius:8px; display:block; }
+    .side-menu a:hover{ background:rgba(103,112,179,0.06); color:var(--primary); }
+
+    .hero{
+      padding:32px 0;
+    }
+
+    .hero h2{
+      margin:10px 0;
+      font-size:2rem;
+    }
+
+    .hero p{ color:var(--muted); }
+
+    .btn{
+      display:inline-block;
+      margin-top:12px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:0;
+      background:var(--primary);
+      color:#ffffff;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    section{
+      padding:24px 0;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:14px;
+      margin-top:12px;
+    }
+
+    .card{
+      background:#fffeff;
+      padding:16px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,0.06);
+    }
+
+    footer{
+      background:#a68ce4;
+      border-top:1px solid rgba(0,0,0,0.08);
+      text-align:center;
+      padding:16px;
+      color:var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="nav-left">
+          <button class="hamburger" id="hamburger" aria-label="Open main menu" aria-expanded="false">
+            <span class="bar"></span>
+          </button>
+          <h1>RestroFlow</h1>
+        </div>
+
+        <div class="nav-right">
+          <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#contact">Contact</a>
+          </div>
+
+          <div class="auth">
+            <a class="auth-btn" href="login.html">Log in</a>
+            <a class="auth-btn primary" href="signup.html">Sign up</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+  <aside id="sideMenu" class="side-menu" aria-hidden="true" aria-labelledby="menuTitle">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="menuTitle">Main Menu</h3>
+      <button id="menuClose" class="auth-btn" aria-label="Close menu">Close</button>
+    </div>
+
+    <nav>
+      <a href="#dine">Dine</a>
+      <a href="#order">Order</a>
+      <a href="#restaurants">Restaurants</a>
+      <a href="#specials">Special Features</a>
+      <a href="#billing">Billing</a>
+      <a href="#contact">Contact Us</a>
+      <a href="#support">Raise a Query</a>
+    </nav>
+  </aside>
+
+  <main class="container">
+    <section class="hero">
+      <h2>Restaurant Management System</h2>
+      <p>Simple billing, orders, and menu control in one place.</p>
+      <button class="btn">Launch Demo</button>
+    </section>
+
+    <section id="features">
+      <h2>Features</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Dine-In</h3>
+          <p>Table tracking, discounts, and kitchen routing.</p>
+        </article>
+
+        <article class="card">
+          <h3>Delivery</h3>
+          <p>All online orders in one feed with status updates.</p>
+        </article>
+
+        <article class="card">
+          <h3>Billing</h3>
+          <p>GST invoices, split payments, and settlements.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <div class="card">
+        <p>Email: <a href="mailto:hello@restroflow.com">hello@restroflow.com</a></p>
+        <p>Phone: +91 98765 43210</p>
+        <p>Location: Indore, India</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+  <p>&copy; 2026 RestroFlow</p>
+</footer>
+
+<style>
+  footer {
+    color: white;
+  }
+</style>
+</style>
+
+<script>
+  (function(){
+    const hamburger = document.getElementById('hamburger');
+    const sideMenu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('menuOverlay');
+    const closeBtn = document.getElementById('menuClose');
+
+    function openMenu(){
+      sideMenu.classList.add('show'); overlay.classList.add('show');
+      sideMenu.setAttribute('aria-hidden','false'); overlay.setAttribute('aria-hidden','false');
+      hamburger.setAttribute('aria-expanded','true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMenu(){
+      sideMenu.classList.remove('show'); overlay.classList.remove('show');
+      sideMenu.setAttribute('aria-hidden','true'); overlay.setAttribute('aria-hidden','true');
+      hamburger.setAttribute('aria-expanded','false');
+      document.body.style.overflow = '';
+    }
+
+    hamburger.addEventListener('click', function(){
+      const isOpen = sideMenu.classList.contains('show');
+      (isOpen ? closeMenu : openMenu)();
+    });
+    overlay.addEventListener('click', closeMenu);
+    closeBtn && closeBtn.addEventListener('click', closeMenu);
+
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+  })();
+</script>
+
+</body>
+</html>
+
