@@ -1,0 +1,401 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Order — RestroFlow</title>
+  <style>
+    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    .container{max-width:1100px;margin:20px auto;padding:16px}
+    a.back{display:inline-block;margin-bottom:12px;color:var(--primary);text-decoration:none}
+    h1{margin:6px 0 12px}
+    .layout{display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .card{background:#fff;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06)}
+
+    form .row{display:flex;gap:8px;margin-bottom:8px}
+    input, select, textarea{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);width:100%}
+    .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--primary);color:#fff;cursor:pointer;font-weight:700}
+    .muted{color:#6b6b6b;font-size:0.95rem}
+
+    .orders-list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+    .order-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.04)}
+    .meta{font-size:0.9rem;color:#555}
+    .pill{padding:6px 8px;border-radius:8px;font-weight:700;font-size:0.85rem}
+    .pending{background:#fff8e6;color:#b65b00}
+    .inprogress{background:#eef2ff;color:#3b2f9b}
+    .ready{background:#e9f7ef;color:#067a3b}
+
+    .small{font-size:0.85rem}
+    .history-list{max-height:300px;overflow:auto;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="home_page.html">← Back to Home</a>
+    <h1>Orders</h1>
+    <div class="layout">
+      <div>
+        <div class="card">
+          <h3>Create Order</h3>
+          <form id="orderForm">
+            <div class="row">
+              <select id="orderType">
+                <option value="dine">Dine-In</option>
+                <option value="pickup">Pickup</option>
+                <option value="delivery">Delivery</option>
+              </select>
+              <input id="customerName" placeholder="Customer name (optional)" />
+            </div>
+
+            <div class="row">
+              <select id="menuItem">
+                <optgroup label="Starters">
+                  <option value="samosa|Fryer">Samosa (3 pcs) — ₹89</option>
+                  <option value="pakora|Fryer">Pakora Mix — ₹99</option>
+                  <option value="springroll|Fryer">Spring Roll (3 pcs) — ₹109</option>
+                  <option value="onionBhaji|Fryer">Onion Bhaji — ₹79</option>
+                  <option value="veggieKebab|Grill">Veg Kebab — ₹119</option>
+                  <option value="tomatoSoup|Stove">Tomato Soup — ₹79</option>
+                  <option value="mushroomSoup|Stove">Mushroom Soup — ₹89</option>
+                </optgroup>
+                <optgroup label="Main Course">
+                  <option value="dal|Stove">Tadka Dal — ₹139</option>
+                  <option value="paneerTikka|Grill">Paneer Tikka — ₹189</option>
+                  <option value="vegBiryani|Oven">Vegetable Biryani — ₹219</option>
+                  <option value="vegPulao|Oven">Veg Pulao — ₹199</option>
+                  <option value="chanaKulcha|Oven">Chana Kulcha — ₹129</option>
+                  <option value="vegRistto|Stove">Mushroom Risotto — ₹229</option>
+                </optgroup>
+                <optgroup label="North Indian">
+                  <option value="paneerMakhani|Stove">Paneer Makhani — ₹249</option>
+                  <option value="tandooriPaneer|Grill">Tandoori Paneer — ₹289</option>
+                  <option value="vegNihari|Stove">Veg Nihari — ₹199</option>
+                  <option value="vegRogan|Stove">Veg Rogan Josh — ₹219</option>
+                  <option value="korma|Stove">Paneer Korma — ₹179</option>
+                  <option value="aloo|Stove">Aloo Gobi — ₹149</option>
+                </optgroup>
+                <optgroup label="South Indian">
+                  <option value="dosa|Oven">Masala Dosa — ₹129</option>
+                  <option value="idli|Stove">Idli (6 pcs) — ₹79</option>
+                  <option value="sambar|Stove">Sambar & Rice — ₹109</option>
+                  <option value="uttapam|Oven">Uttapam — ₹119</option>
+                  <option value="rasam|Stove">Rasam Rice — ₹89</option>
+                  <option value="vegthali|Stove">Veg Thali (Mixed) — ₹189</option>
+                </optgroup>
+                <optgroup label="Chinese">
+                  <option value="friedRice|Fryer">Fried Rice (Veg) — ₹119</option>
+                  <option value="vegFriedRice|Fryer">Paneer Fried Rice — ₹149</option>
+                  <option value="vegFriedMomos|Fryer">Veg Fried Momos — ₹139</option>
+                  <option value="vegSteamMomos|Stove">Veg Steamed Momos — ₹119</option>
+                  <option value="noodles|Stove">Chow Mein (Veg) — ₹99</option>
+                  <option value="mushNoodles|Stove">Mushroom Chow Mein — ₹129</option>
+                </optgroup>
+                <optgroup label="Italian">
+                  <option value="margherita|Oven">Margherita Pizza — ₹249</option>
+                  <option value="veggiePizza|Oven">Veggie Pizza — ₹279</option>
+                  <option value="veggieSupreme|Oven">Veggie Supreme Pizza — ₹309</option>
+                  <option value="pasta|Stove">Pasta Carbonara (Veg) — ₹189</option>
+                  <option value="ragu|Stove">Pasta Bolognese (Veg) — ₹179</option>
+                  <option value="alfredo|Stove">Pasta Alfredo — ₹199</option>
+                </optgroup>
+                <optgroup label="Continental">
+                  <option value="veggieSteak|Grill">Veggie Steak — ₹199</option>
+                  <option value="grilledPaneer|Grill">Grilled Paneer Platter — ₹239</option>
+                  <option value="mushroomSteak|Grill">Mushroom Steak — ₹229</option>
+                  <option value="veggieGrill|Grill">Mixed Veg Grill — ₹219</option>
+                  <option value="veggieGoujon|Fryer">Paneer Goujon — ₹189</option>
+                </optgroup>
+                <optgroup label="Beverages">
+                  <option value="coke|Beverage">Coca Cola (500ml) — ₹49</option>
+                  <option value="sprite|Beverage">Sprite (500ml) — ₹49</option>
+                  <option value="orangeJuice|Beverage">Fresh Orange Juice — ₹69</option>
+                  <option value="mango|Beverage">Mango Lassi — ₹59</option>
+                  <option value="strawberry|Beverage">Strawberry Lassi — ₹59</option>
+                  <option value="sweetLassi|Beverage">Sweet Lassi — ₹49</option>
+                  <option value="chai|Beverage">Hot Chai — ₹39</option>
+                  <option value="coffee|Beverage">Coffee (Espresso) — ₹79</option>
+                  <option value="coldCoffee|Beverage">Cold Coffee — ₹89</option>
+                  <option value="iceTeaLemon|Beverage">Iced Lemon Tea — ₹49</option>
+                  <option value="bananaMilk|Beverage">Banana Smoothie — ₹69</option>
+                  <option value="strawberryMilk|Beverage">Strawberry Shake — ₹69</option>
+                  <option value="chocolateMilk|Beverage">Chocolate Shake — ₹69</option>
+                  <option value="lemonWater|Beverage">Fresh Lime Water — ₹29</option>
+                  <option value="watermelon|Beverage">Watermelon Juice — ₹59</option>
+                  <option value="pomegranate|Beverage">Pomegranate Juice — ₹79</option>
+                </optgroup>
+                <optgroup label="Desserts">
+                  <option value="vanillaIce|Dessert">Vanilla Ice Cream — ₹79</option>
+                  <option value="chocolateIce|Dessert">Chocolate Ice Cream — ₹79</option>
+                  <option value="strawberryIce|Dessert">Strawberry Ice Cream — ₹79</option>
+                  <option value="mintIce|Dessert">Mint Chocolate Ice Cream — ₹89</option>
+                  <option value="pistachio|Dessert">Pistachio Ice Cream — ₹89</option>
+                  <option value="kulfi|Dessert">Malai Kulfi — ₹69</option>
+                  <option value="gulab|Dessert">Gulab Jamun — ₹59</option>
+                  <option value="rasgulla|Dessert">Rasgulla — ₹49</option>
+                  <option value="kheer|Dessert">Kheer — ₹59</option>
+                  <option value="payesh|Dessert">Payesh — ₹59</option>
+                  <option value="halwa|Dessert">Carrot Halwa — ₹79</option>
+                  <option value="jalebi|Dessert">Jalebi — ₹49</option>
+                  <option value="laddu|Dessert">Boondi Laddu — ₹59</option>
+                  <option value="barfi|Dessert">Milk Barfi — ₹79</option>
+                  <option value="khir|Dessert">Rice Pudding — ₹69</option>
+                  <option value="brownie|Dessert">Chocolate Brownie — ₹99</option>
+                </optgroup>
+              </select>
+              <input id="qty" type="number" min="1" value="1" />
+            </div>
+
+            <div class="row">
+              <button id="addItem" class="btn" type="button">Add Item</button>
+              <button id="createOrder" class="btn" type="button">Create Order</button>
+            </div>
+
+            <div style="margin-top:8px">
+              <strong>Items:</strong>
+              <ul id="itemsList" class="muted small"></ul>
+            </div>
+          </form>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Active Orders</h3>
+          <div id="orders" class="orders-list"></div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h3>Order History</h3>
+          <div id="history" class="history-list muted small"></div>
+          <div style="margin-top:8px;text-align:right"><button id="clearHistory" class="btn" style="background:#c94e4e">Clear</button></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Kitchen Stations</h3>
+          <p class="muted small">Orders are routed to stations based on items: Grill, Fryer, Salad, Oven, Stove.</p>
+          <div id="stations" style="margin-top:8px"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const orderForm = document.getElementById('orderForm');
+      const menuItem = document.getElementById('menuItem');
+      const qty = document.getElementById('qty');
+      const addItemBtn = document.getElementById('addItem');
+      const createOrderBtn = document.getElementById('createOrder');
+      const itemsList = document.getElementById('itemsList');
+      const ordersEl = document.getElementById('orders');
+      const historyEl = document.getElementById('history');
+      const stationsEl = document.getElementById('stations');
+      const orderType = document.getElementById('orderType');
+      const customerName = document.getElementById('customerName');
+      const clearHistory = document.getElementById('clearHistory');
+
+      const MENU = {
+        // Starters
+        samosa:{price:89,station:'Fryer'},
+        pakora:{price:99,station:'Fryer'},
+        springroll:{price:109,station:'Fryer'},
+        onionBhaji:{price:79,station:'Fryer'},
+        veggieKebab:{price:119,station:'Grill'},
+        tomatoSoup:{price:79,station:'Stove'},
+        mushroomSoup:{price:89,station:'Stove'},
+        // Main Course
+        dal:{price:139,station:'Stove'},
+        paneerTikka:{price:189,station:'Grill'},
+        vegBiryani:{price:219,station:'Oven'},
+        vegPulao:{price:199,station:'Oven'},
+        chanaKulcha:{price:129,station:'Oven'},
+        vegRistto:{price:229,station:'Stove'},
+        // North Indian
+        paneerMakhani:{price:249,station:'Stove'},
+        tandooriPaneer:{price:289,station:'Grill'},
+        vegNihari:{price:199,station:'Stove'},
+        vegRogan:{price:219,station:'Stove'},
+        korma:{price:179,station:'Stove'},
+        aloo:{price:149,station:'Stove'},
+        // South Indian
+        dosa:{price:129,station:'Oven'},
+        idli:{price:79,station:'Stove'},
+        sambar:{price:109,station:'Stove'},
+        uttapam:{price:119,station:'Oven'},
+        rasam:{price:89,station:'Stove'},
+        vegthali:{price:189,station:'Stove'},
+        // Chinese
+        friedRice:{price:119,station:'Fryer'},
+        vegFriedRice:{price:149,station:'Fryer'},
+        vegFriedMomos:{price:139,station:'Fryer'},
+        vegSteamMomos:{price:119,station:'Stove'},
+        noodles:{price:99,station:'Stove'},
+        mushNoodles:{price:129,station:'Stove'},
+        // Italian
+        margherita:{price:249,station:'Oven'},
+        veggiePizza:{price:279,station:'Oven'},
+        veggieSupreme:{price:309,station:'Oven'},
+        pasta:{price:189,station:'Stove'},
+        ragu:{price:179,station:'Stove'},
+        alfredo:{price:199,station:'Stove'},
+        // Continental
+        veggieSteak:{price:199,station:'Grill'},
+        grilledPaneer:{price:239,station:'Grill'},
+        mushroomSteak:{price:229,station:'Grill'},
+        veggieGrill:{price:219,station:'Grill'},
+        veggieGoujon:{price:189,station:'Fryer'},
+        // Beverages
+        coke:{price:49,station:'Beverage'},
+        sprite:{price:49,station:'Beverage'},
+        orangeJuice:{price:69,station:'Beverage'},
+        mango:{price:59,station:'Beverage'},
+        strawberry:{price:59,station:'Beverage'},
+        sweetLassi:{price:49,station:'Beverage'},
+        chai:{price:39,station:'Beverage'},
+        coffee:{price:79,station:'Beverage'},
+        coldCoffee:{price:89,station:'Beverage'},
+        iceTeaLemon:{price:49,station:'Beverage'},
+        bananaMilk:{price:69,station:'Beverage'},
+        strawberryMilk:{price:69,station:'Beverage'},
+        chocolateMilk:{price:69,station:'Beverage'},
+        lemonWater:{price:29,station:'Beverage'},
+        watermelon:{price:59,station:'Beverage'},
+        pomegranate:{price:79,station:'Beverage'},
+        // Desserts
+        vanillaIce:{price:79,station:'Dessert'},
+        chocolateIce:{price:79,station:'Dessert'},
+        strawberryIce:{price:79,station:'Dessert'},
+        mintIce:{price:89,station:'Dessert'},
+        pistachio:{price:89,station:'Dessert'},
+        kulfi:{price:69,station:'Dessert'},
+        gulab:{price:59,station:'Dessert'},
+        rasgulla:{price:49,station:'Dessert'},
+        kheer:{price:59,station:'Dessert'},
+        payesh:{price:59,station:'Dessert'},
+        halwa:{price:79,station:'Dessert'},
+        jalebi:{price:49,station:'Dessert'},
+        laddu:{price:59,station:'Dessert'},
+        barfi:{price:79,station:'Dessert'},
+        khir:{price:69,station:'Dessert'},
+        brownie:{price:99,station:'Dessert'}
+      };
+
+      let currentItems = [];
+      let orders = JSON.parse(localStorage.getItem('rf_orders')||'[]');
+      let history = JSON.parse(localStorage.getItem('rf_history')||'[]');
+
+      function save(){ localStorage.setItem('rf_orders', JSON.stringify(orders)); localStorage.setItem('rf_history', JSON.stringify(history)); }
+
+      function renderItems(){
+        itemsList.innerHTML=''; currentItems.forEach((it,i)=>{ const li=document.createElement('li'); li.textContent=`${it.name} x${it.qty}`; const rem=document.createElement('button'); rem.textContent='×'; rem.style.marginLeft='8px'; rem.addEventListener('click', ()=>{ currentItems.splice(i,1); renderItems(); }); li.appendChild(rem); itemsList.appendChild(li); });
+      }
+
+      addItemBtn.addEventListener('click', ()=>{
+        const [code,station] = menuItem.value.split('|');
+        const name = menuItem.options[menuItem.selectedIndex].text.split(' — ')[0];
+        currentItems.push({code,name,qty:parseInt(qty.value,10)||1,station});
+        renderItems();
+      });
+
+      function estimateETA(items){
+        // simple ETA: 5 minutes per item + 3 extra for delivery
+        const base = items.reduce((s,it)=>s + (it.qty*5),0);
+        const extra = orderType.value==='delivery'?3:0; return base + extra;
+      }
+
+      function routeToStations(items){
+        const map = {};
+        items.forEach(it=>{ map[it.station] = (map[it.station]||0) + it.qty; });
+        return map; // station -> qty
+      }
+
+      createOrderBtn.addEventListener('click', ()=>{
+        if(currentItems.length===0){ alert('Add at least one item'); return; }
+        const id = 'O'+Date.now().toString().slice(-5);
+        const type = orderType.value;
+        const eta = estimateETA(currentItems);
+        const stations = routeToStations(currentItems);
+        const order = {id,type,customer:customerName.value||'Guest',items:currentItems.slice(),status:'pending',eta,stations,created:Date.now()};
+        orders.push(order);
+        
+        // Save to active_orders for billing
+        let activeOrders = JSON.parse(localStorage.getItem('active_orders')||'[]');
+        const activeOrderData = {
+          tableNumber: parseInt(prompt('Enter Table Number:', '4'))||4,
+          orderId: id,
+          items: currentItems.map(it=>({
+            name: it.name,
+            qty: it.qty,
+            price: MENU[it.code]?.price || 0
+          })),
+          created: Date.now(),
+          status: 'active'
+        };
+        activeOrders.push(activeOrderData);
+        localStorage.setItem('active_orders', JSON.stringify(activeOrders));
+        
+        // Dispatch storage event for real-time updates
+        window.dispatchEvent(new Event('storage'));
+        
+        currentItems = []; renderItems(); renderOrders(); save();
+      });
+
+      function renderStations(){
+        const stations = {};
+        orders.forEach(o=>{ if(o.status!=='ready'){ Object.keys(o.stations).forEach(s=>{ stations[s] = (stations[s]||0) + o.stations[s]; }); }});
+        stationsEl.innerHTML = Object.keys(stations).length? Object.entries(stations).map(([s,c])=>`<div class="small">${s}: <strong>${c} items</strong></div>`).join('') : '<div class="muted small">No active items in stations</div>';
+      }
+
+      function renderOrders(){
+        ordersEl.innerHTML = '';
+        orders.forEach((o,idx)=>{
+          const div = document.createElement('div'); div.className='order-item';
+          const left = document.createElement('div'); left.innerHTML = `<div><strong>${o.id}</strong> — ${o.customer} <span class="muted">(${o.type})</span></div><div class="meta">${o.items.map(it=>it.name+' x'+it.qty).join(', ')}</div>`;
+          const right = document.createElement('div');
+          const pill = document.createElement('div'); pill.className='pill '+(o.status==='pending'?'pending':o.status==='inprogress'?'inprogress':'ready'); pill.textContent = o.status.toUpperCase();
+          const eta = document.createElement('div'); eta.className='muted small'; eta.textContent = 'ETA: '+(o.eta>0? o.eta+' min':'—');
+          const btns = document.createElement('div'); btns.style.marginTop='6px';
+          const toKitchen = document.createElement('button'); toKitchen.className='btn'; toKitchen.textContent='Send to Kitchen'; toKitchen.addEventListener('click', ()=>{ startPreparation(idx); });
+          const markReady = document.createElement('button'); markReady.className='btn'; markReady.style.marginLeft='6px'; markReady.textContent='Mark Ready'; markReady.addEventListener('click', ()=>{ finishOrder(idx); });
+          btns.appendChild(toKitchen); btns.appendChild(markReady);
+          right.appendChild(pill); right.appendChild(eta); right.appendChild(btns);
+          div.appendChild(left); div.appendChild(right);
+          ordersEl.appendChild(div);
+        });
+        renderStations();
+      }
+
+      function startPreparation(index){
+        const o = orders[index]; if(o.status!=='pending'){ alert('Order already sent'); return; }
+        o.status='inprogress';
+        // set shorter ETA when started
+        o.eta = Math.max(3, Math.round(o.eta*0.6));
+        save(); renderOrders();
+      }
+
+      function finishOrder(index){
+        const o = orders[index]; o.status='ready'; o.completion = Date.now();
+        history.unshift(o); if(history.length>50) history.pop();
+        orders.splice(index,1); save(); renderOrders(); renderHistory();
+      }
+
+      function renderHistory(){
+        historyEl.innerHTML = history.length? history.map(h=>`<div class="small">${h.id} — ${h.customer} — ${h.type} — <span class="muted">${new Date(h.completion).toLocaleString()}</span></div>`).join('') : '<div class="muted small">No history</div>';
+      }
+
+      clearHistory.addEventListener('click', ()=>{ if(confirm('Clear history?')){ history = []; save(); renderHistory(); } });
+
+      // ETA countdown simulation per minute
+      setInterval(()=>{
+        orders.forEach(o=>{ if(o.eta>0){ o.eta = Math.max(0,o.eta-1); } });
+        save(); renderOrders();
+      }, 60*1000);
+
+      // initial render
+      renderItems(); renderOrders(); renderHistory();
+    })();
+  </script>
+</body>
+</html>

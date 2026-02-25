@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Bill — RestroFlow</title>
+  <style>
+    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e;--success:#067a3b}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    .container{max-width:500px;margin:0 auto;padding:16px;min-height:100vh}
+    a.back{display:inline-block;margin-bottom:12px;color:var(--primary);text-decoration:none;font-weight:700}
+    h1{margin:6px 0 20px;font-size:1.5rem}
+    h2{font-size:1.1rem;color:var(--primary);margin:16px 0 12px;font-weight:700}
+    
+    /* Receipt Card */
+    .receipt{background:#fff;padding:20px;border-radius:12px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.08);margin-bottom:16px}
+    
+    /* Order Items */
+    .receipt-header{text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e0e0e0}
+    .receipt-header h3{margin:0;color:var(--primary);font-size:1.2rem}
+    .receipt-table{display:table;width:100%;margin-bottom:12px}
+    .receipt-row{display:table-row;padding:8px 0}
+    .receipt-row.header{font-weight:700;border-bottom:1px solid #e0e0e0;margin-bottom:8px}
+    .receipt-cell{display:table-cell;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04)}
+    .receipt-cell:first-child{text-align:left}
+    .receipt-cell:last-child{text-align:right}
+    .item-name{font-weight:600;color:var(--text)}
+    .item-qty{color:#666;font-size:0.9rem}
+    .item-price{font-weight:700}
+
+    /* Cost Breakdown */
+    .breakdown{background:#f7f7fb;padding:12px;border-radius:8px;margin-top:16px}
+    .breakdown-row{display:flex;justify-content:space-between;padding:8px 0;font-size:0.95rem}
+    .breakdown-row.total{border-top:2px solid var(--primary);padding-top:12px;font-weight:700;color:var(--primary)}
+    .breakdown-row.grand-total{font-size:1.4rem;color:var(--primary);padding-top:12px;margin-top:8px;border-top:2px solid var(--primary)}
+    .breakdown-label{color:#666}
+    .breakdown-value{font-weight:700;text-align:right}
+
+    /* Grand Total Display */
+    .grand-total-card{background:linear-gradient(135deg,#826cd7,#a68ce4);color:#fff;padding:20px;border-radius:12px;text-align:center;margin-bottom:16px;box-shadow:0 4px 16px rgba(130,108,215,0.3)}
+    .grand-total-card .label{font-size:0.9rem;opacity:0.9;margin-bottom:6px}
+    .grand-total-card .amount{font-size:2.5rem;font-weight:800;letter-spacing:-1px}
+
+    /* Split Bill Section */
+    .split-section{background:#fff;padding:16px;border-radius:12px;border:1px solid rgba(0,0,0,0.06);margin-bottom:16px}
+    .split-toggle{display:flex;gap:8px;margin-bottom:12px}
+    .toggle-btn{flex:1;padding:10px;border:2px solid #e0e0e0;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;font-size:0.9rem;transition:all 0.2s}
+    .toggle-btn.active{border-color:var(--primary);background:var(--primary);color:#fff}
+    
+    .split-input-group{display:none;gap:8px;align-items:center}
+    .split-input-group.active{display:flex}
+    .split-input-group input{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.1);flex:1;font-size:1rem}
+    .split-per-person{font-weight:700;color:var(--primary);font-size:1.1rem}
+
+    /* Payment Methods */
+    .payment-section{background:#fff;padding:16px;border-radius:12px;border:1px solid rgba(0,0,0,0.06);margin-bottom:16px}
+    .payment-btn{width:100%;padding:14px;margin-bottom:10px;border-radius:10px;border:2px solid #e0e0e0;background:#fff;cursor:pointer;font-weight:700;font-size:0.95rem;transition:all 0.2s;display:flex;align-items:center;gap:12px}
+    .payment-btn:hover{border-color:var(--primary);background:#f7f2ff}
+    .payment-btn.active{border-color:var(--primary);background:var(--primary);color:#fff}
+    .payment-icon{font-size:1.5rem}
+    .payment-btn-text{text-align:left}
+    .payment-method{font-weight:700}
+    .payment-desc{font-size:0.8rem;opacity:0.7}
+
+    /* QR Code Placeholder */
+    .qr-placeholder{background:#f7f7fb;padding:12px;border-radius:8px;display:none;text-align:center;margin-top:8px}
+    .qr-placeholder.active{display:block}
+    .qr-box{background:#fff;border:2px dashed var(--primary);border-radius:8px;width:120px;height:120px;margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--primary);font-weight:700;font-size:2rem}
+
+    /* Support Section */
+    .support-section{display:flex;gap:12px;margin-top:16px}
+    .support-link{flex:1;padding:10px;border:1px solid var(--primary);color:var(--primary);background:#fff;border-radius:8px;text-align:center;text-decoration:none;font-weight:700;cursor:pointer;font-size:0.9rem;transition:all 0.2s}
+    .support-link:hover{background:#f7f2ff}
+
+    /* Success Message */
+    .success-msg{display:none;background:#e9f7ef;color:var(--success);padding:12px;border-radius:8px;border-left:4px solid var(--success);margin-bottom:16px;font-weight:700}
+    .success-msg.show{display:block}
+
+    .muted{color:#6b6b6b;font-size:0.9rem}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="dine.html">← Back to Table Plan</a>
+    <h1>Your Bill</h1>
+
+    <!-- Success Message -->
+    <div class="success-msg" id="successMsg">✓ Payment successful! Thank you for dining with us.</div>
+
+    <!-- Order Summary (Receipt-Style Card) -->
+    <div class="receipt">
+      <div class="receipt-header">
+        <h3 id="orderTitle">Order Summary</h3>
+        <p class="muted" id="orderMeta">No active order selected</p>
+      </div>
+
+      <div id="itemsContainer" class="receipt-table">
+        <div class="receipt-row header">
+          <div class="receipt-cell">Item</div>
+          <div class="receipt-cell">Qty</div>
+          <div class="receipt-cell">Price</div>
+        </div>
+      </div>
+
+      <!-- Cost Breakdown -->
+      <div class="breakdown">
+        <div class="breakdown-row">
+          <span class="breakdown-label">Subtotal</span>
+          <span class="breakdown-value" id="subtotal">₹0</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">CGST (2.5%)</span>
+          <span class="breakdown-value" id="cgst">₹0</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">SGST (2.5%)</span>
+          <span class="breakdown-value" id="sgst">₹0</span>
+        </div>
+        <div class="breakdown-row total">
+          <span class="breakdown-label">Service Charge (5%)</span>
+          <span class="breakdown-value" id="serviceCharge">₹0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grand Total -->
+    <div class="grand-total-card">
+      <div class="label">AMOUNT TO PAY</div>
+      <div class="amount" id="grandTotal">₹0</div>
+    </div>
+
+    <!-- Split Bill Feature -->
+    <div class="split-section">
+      <h2 style="margin-top:0">Split This Bill</h2>
+      <div class="split-toggle">
+        <button class="toggle-btn active" data-split="equal">Split Equally</button>
+        <button class="toggle-btn" data-split="items">Pay for Items</button>
+      </div>
+      
+      <div class="split-input-group active" id="equalSplitGroup">
+        <label for="splitCount" style="font-weight:700">Split by</label>
+        <input type="number" id="splitCount" min="2" max="10" value="2" />
+        <span class="split-per-person" id="perPersonCost">₹0 per person</span>
+      </div>
+      
+      <div class="split-input-group" id="itemsSplitGroup">
+        <p class="muted">Select which items you're paying for to calculate your portion.</p>
+      </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="payment-section">
+      <h2 style="margin-top:0">Choose Payment Method</h2>
+      
+      <button class="payment-btn" data-method="upi">
+        <div class="payment-icon">📱</div>
+        <div class="payment-btn-text">
+          <div class="payment-method">Pay via UPI</div>
+          <div class="payment-desc">Google Pay, PhonePe, Paytm</div>
+        </div>
+      </button>
+
+      <button class="payment-btn" data-method="card">
+        <div class="payment-icon">💳</div>
+        <div class="payment-btn-text">
+          <div class="payment-method">Credit / Debit Card</div>
+          <div class="payment-desc">Visa, MasterCard, Amex</div>
+        </div>
+      </button>
+
+      <button class="payment-btn" data-method="cash">
+        <div class="payment-icon">💵</div>
+        <div class="payment-btn-text">
+          <div class="payment-method">Pay Cash at Counter</div>
+          <div class="payment-desc">Call for bill collection</div>
+        </div>
+      </button>
+
+      <!-- QR Code Placeholder (for UPI) -->
+      <div class="qr-placeholder" id="qrPlaceholder">
+        <p style="margin:0 0 8px;font-weight:700">Scan to Pay</p>
+        <div class="qr-box">🔲</div>
+        <p class="muted" style="margin:8px 0 0">Scan the QR code above with your UPI app</p>
+      </div>
+    </div>
+
+    <!-- Support Section -->
+    <div class="support-section">
+      <a href="#" class="support-link" id="downloadInvoice">📄 Download Invoice</a>
+      <a href="#" class="support-link" id="reportIssue">⚠️ Report Issue / Refund</a>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      let currentOrder = null;
+      let currentGrandTotal = 0;
+
+      // Tax rates
+      const CGST_RATE = 0.025;
+      const SGST_RATE = 0.025;
+      const SERVICE_CHARGE_RATE = 0.05;
+
+      // Calculate totals
+      function calculateTotals(order){
+        if(!order || !order.items) return { subtotal: 0, cgst: 0, sgst: 0, serviceCharge: 0, grandTotal: 0 };
+
+        const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const cgst = Math.round(subtotal * CGST_RATE);
+        const sgst = Math.round(subtotal * SGST_RATE);
+        const serviceCharge = Math.round(subtotal * SERVICE_CHARGE_RATE);
+        const grandTotal = subtotal + cgst + sgst + serviceCharge;
+
+        return { subtotal, cgst, sgst, serviceCharge, grandTotal };
+      }
+
+      // Render order items
+      function renderOrderItems(order){
+        const container = document.getElementById('itemsContainer');
+        container.innerHTML = `
+          <div class="receipt-row header">
+            <div class="receipt-cell">Item</div>
+            <div class="receipt-cell">Qty</div>
+            <div class="receipt-cell">Price</div>
+          </div>
+        `;
+
+        if(order && order.items){
+          order.items.forEach(item => {
+            const totalPrice = item.price * item.qty;
+            const row = document.createElement('div');
+            row.className = 'receipt-row';
+            row.innerHTML = `
+              <div class="receipt-cell">
+                <div class="item-name">${item.name}</div>
+              </div>
+              <div class="receipt-cell">${item.qty}x</div>
+              <div class="receipt-cell"><span class="item-price">₹${totalPrice}</span></div>
+            `;
+            container.appendChild(row);
+          });
+        }
+      }
+
+      // Render totals
+      function renderTotals(order){
+        const totals = calculateTotals(order);
+        currentGrandTotal = totals.grandTotal;
+
+        document.getElementById('subtotal').textContent = `₹${totals.subtotal}`;
+        document.getElementById('cgst').textContent = `₹${totals.cgst}`;
+        document.getElementById('sgst').textContent = `₹${totals.sgst}`;
+        document.getElementById('serviceCharge').textContent = `₹${totals.serviceCharge}`;
+        document.getElementById('grandTotal').textContent = `₹${totals.grandTotal}`;
+
+        // Update split calculation
+        updateSplitCost();
+      }
+
+      // Load and display order
+      function loadOrder(){
+        const activeOrders = JSON.parse(localStorage.getItem('active_orders') || '[]');
+        
+        if(activeOrders.length > 0){
+          currentOrder = activeOrders[activeOrders.length - 1]; // Get the most recent order
+          
+          const orderTitle = document.getElementById('orderTitle');
+          const orderMeta = document.getElementById('orderMeta');
+          
+          orderTitle.textContent = `Order Summary - Table ${currentOrder.tableNumber}`;
+          const createdTime = new Date(currentOrder.created).toLocaleTimeString();
+          orderMeta.textContent = `Order #${currentOrder.orderId} • ${createdTime}`;
+          
+          renderOrderItems(currentOrder);
+          renderTotals(currentOrder);
+        } else {
+          document.getElementById('orderTitle').textContent = 'No Active Orders';
+          document.getElementById('orderMeta').textContent = 'Create an order from the Orders page to see billing';
+          document.getElementById('itemsContainer').innerHTML = '<div style="padding:20px;text-align:center;color:#999">No items to display</div>';
+          document.getElementById('grandTotal').textContent = '₹0';
+        }
+      }
+
+      // Split Bill Toggle
+      const splitToggles = document.querySelectorAll('[data-split]');
+      const equalSplitGroup = document.getElementById('equalSplitGroup');
+      const itemsSplitGroup = document.getElementById('itemsSplitGroup');
+      const splitCount = document.getElementById('splitCount');
+      const perPersonCost = document.getElementById('perPersonCost');
+
+      function updateSplitCost(){
+        const count = parseInt(splitCount.value) || 1;
+        const perPerson = Math.round(currentGrandTotal / count);
+        perPersonCost.textContent = `₹${perPerson} per person`;
+      }
+
+      splitToggles.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          splitToggles.forEach(b=> b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          if(btn.dataset.split === 'equal'){
+            equalSplitGroup.classList.add('active');
+            itemsSplitGroup.classList.remove('active');
+          } else {
+            equalSplitGroup.classList.remove('active');
+            itemsSplitGroup.classList.add('active');
+          }
+        });
+      });
+
+      splitCount.addEventListener('change', updateSplitCost);
+
+      // Payment Methods
+      const paymentBtns = document.querySelectorAll('[data-method]');
+      const qrPlaceholder = document.getElementById('qrPlaceholder');
+
+      paymentBtns.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          paymentBtns.forEach(b=> b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          if(btn.dataset.method === 'upi'){
+            qrPlaceholder.classList.add('active');
+          } else {
+            qrPlaceholder.classList.remove('active');
+          }
+        });
+      });
+
+      // Download Invoice
+      document.getElementById('downloadInvoice').addEventListener('click', (e)=>{
+        e.preventDefault();
+        alert('Generating digital invoice PDF... The invoice will be sent to your email and stored in your account.');
+      });
+
+      // Report Issue
+      document.getElementById('reportIssue').addEventListener('click', (e)=>{
+        e.preventDefault();
+        alert('Sorry to hear about the issue! Our team will review your request and process a refund if applicable. A staff member will contact you shortly.');
+      });
+
+      // Simulate payment
+      document.querySelectorAll('[data-method]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          setTimeout(()=>{
+            alert(`Processing payment via ${btn.dataset.method}...`);
+            document.getElementById('successMsg').classList.add('show');
+            
+            // Move order from active to history
+            if(currentOrder){
+              let activeOrders = JSON.parse(localStorage.getItem('active_orders') || '[]');
+              activeOrders = activeOrders.filter(o => o.orderId !== currentOrder.orderId);
+              localStorage.setItem('active_orders', JSON.stringify(activeOrders));
+            }
+            
+            paymentBtns.forEach(b=> b.style.opacity = '0.5');
+          }, 1000);
+        });
+      });
+
+      // Listen for real-time updates
+      window.addEventListener('storage', loadOrder);
+      
+      // Initial load
+      loadOrder();
+    })();
+  </script>
+</body>
+</html>

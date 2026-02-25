@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Raise a Query — RestroFlow</title>
+  <style>
+    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    
+    .container{max-width:700px;margin:0 auto;padding:20px}
+    
+    a.back{display:inline-block;margin-bottom:16px;color:var(--primary);text-decoration:none;font-weight:700}
+    
+    h1{margin:12px 0 8px;font-size:2rem}
+    
+    .subtitle{color:#666;font-size:1rem;margin-bottom:16px;line-height:1.6}
+    
+    .urgent-alert{
+      background:#fff3cd;
+      border-left:4px solid #ffc107;
+      padding:14px;
+      border-radius:8px;
+      margin-bottom:24px;
+      color:#664d03;
+      font-weight:500;
+      font-size:0.95rem;
+      line-height:1.6;
+    }
+    
+    .form-card{
+      background:#fff;
+      padding:28px;
+      border-radius:12px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .form-card h2{
+      color:var(--primary);
+      font-size:1.2rem;
+      margin:0 0 20px;
+    }
+    
+    .form-group{
+      margin-bottom:18px;
+    }
+    
+    .form-group label{
+      display:block;
+      font-weight:700;
+      margin-bottom:6px;
+      color:var(--text);
+      font-size:0.95rem;
+    }
+    
+    .form-group .optional{
+      font-weight:400;
+      color:#999;
+      font-style:italic;
+    }
+    
+    input,select,textarea{
+      width:100%;
+      padding:10px;
+      border:1px solid rgba(0,0,0,0.1);
+      border-radius:8px;
+      font-family:inherit;
+      font-size:0.95rem;
+      box-sizing:border-box;
+    }
+    
+    input:focus,select:focus,textarea:focus{
+      outline:none;
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(130,108,215,0.1);
+    }
+    
+    textarea{
+      resize:vertical;
+      min-height:130px;
+    }
+    
+    .file-input-wrapper{
+      position:relative;
+      overflow:hidden;
+      display:inline-block;
+      width:100%;
+    }
+    
+    input[type="file"]{
+      padding:0;
+      border:2px dashed rgba(0,0,0,0.15);
+      background:rgba(0,0,0,0.02);
+      cursor:pointer;
+      padding:12px;
+      text-align:center;
+    }
+    
+    input[type="file"]::-webkit-file-upload-button{
+      padding:6px 12px;
+      background:var(--primary);
+      color:#fff;
+      border:0;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:700;
+      margin-right:8px;
+    }
+    
+    .submit-btn{
+      width:100%;
+      padding:12px;
+      background:var(--primary);
+      color:#fff;
+      border:0;
+      border-radius:8px;
+      font-size:1rem;
+      font-weight:700;
+      cursor:pointer;
+      transition:all 0.2s;
+      margin-top:10px;
+    }
+    
+    .submit-btn:hover{
+      opacity:0.9;
+      transform:translateY(-1px);
+      box-shadow:0 4px 12px rgba(130,108,215,0.3);
+    }
+    
+    .success-message{
+      display:none;
+      background:#e9f7ef;
+      color:#067a3b;
+      padding:14px;
+      border-radius:8px;
+      border-left:4px solid #067a3b;
+      margin-bottom:20px;
+      font-weight:700;
+      text-align:center;
+    }
+    
+    .success-message.show{
+      display:block;
+    }
+    
+    @media (max-width: 768px){
+      .container{
+        padding:16px;
+      }
+      
+      h1{
+        font-size:1.5rem;
+      }
+      
+      .form-card{
+        padding:20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="home_page.html">← Back to Home</a>
+    
+    <h1>Raise a Query</h1>
+    <p class="subtitle">Support: Describe your issue and we will get back to you as soon as possible.</p>
+    
+    <div class="urgent-alert">
+      🚨 For urgent matters regarding an active order, please call our support number directly: <strong>+91 98765 43210.</strong>
+    </div>
+
+    <div class="form-card">
+      <h2>Submit a Support Ticket</h2>
+      
+      <div class="success-message" id="successMessage">
+        ✓ Your query has been submitted successfully. Our team will contact you within 24 hours.
+      </div>
+
+      <form id="queryForm">
+        <div class="form-group">
+          <label for="fullName">Full Name *</label>
+          <input type="text" id="fullName" name="fullName" placeholder="John Doe" required />
+        </div>
+
+        <div class="form-group">
+          <label for="contactNumber">Contact Number *</label>
+          <input type="tel" id="contactNumber" name="contactNumber" placeholder="+91 98765 43210" required />
+        </div>
+
+        <div class="form-group">
+          <label for="orderId">Order ID / Receipt Number <span class="optional">(Optional)</span></label>
+          <input type="text" id="orderId" name="orderId" placeholder="e.g., ORD-12345" />
+        </div>
+
+        <div class="form-group">
+          <label for="issueType">Type of Issue *</label>
+          <select id="issueType" name="issueType" required>
+            <option value="">Select an issue type</option>
+            <option value="payment">Payment / Double Charge</option>
+            <option value="missing-item">Missing Item in Delivery</option>
+            <option value="food-quality">Food Quality Issue</option>
+            <option value="staff-service">Staff / Service Complaint</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Issue Description *</label>
+          <textarea id="description" name="description" placeholder="Please provide as much detail as possible..." required rows="5"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="photoUpload">Upload Photo <span class="optional">(Optional)</span></label>
+          <div class="file-input-wrapper">
+            <input type="file" id="photoUpload" name="photoUpload" accept="image/*" />
+          </div>
+          <small style="color:#999;display:block;margin-top:6px">Attach a photo if relevant (e.g., wrong food received)</small>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Query</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const queryForm = document.getElementById('queryForm');
+      const successMessage = document.getElementById('successMessage');
+
+      queryForm.addEventListener('submit', (e)=>{
+        e.preventDefault();
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const contactNumber = document.getElementById('contactNumber').value.trim();
+        const orderId = document.getElementById('orderId').value.trim();
+        const issueType = document.getElementById('issueType').value;
+        const description = document.getElementById('description').value.trim();
+        const photoFile = document.getElementById('photoUpload').files[0];
+
+        // Validate required fields
+        if(!fullName || !contactNumber || !issueType || !description){
+          alert('Please fill in all required fields');
+          return;
+        }
+
+        // Save query to localStorage
+        const queries = JSON.parse(localStorage.getItem('query_submissions')||'[]');
+        const querySubmission = {
+          id: 'QRY'+Date.now(),
+          fullName,
+          contactNumber,
+          orderId: orderId || 'N/A',
+          issueType,
+          description,
+          photoFileName: photoFile ? photoFile.name : 'N/A',
+          submitted: new Date().toLocaleString(),
+          status: 'pending'
+        };
+
+        queries.push(querySubmission);
+        localStorage.setItem('query_submissions', JSON.stringify(queries));
+
+        // Show success message
+        successMessage.classList.add('show');
+
+        // Reset form
+        queryForm.reset();
+        document.getElementById('photoUpload').value = '';
+
+        // Hide success message after 6 seconds
+        setTimeout(()=>{
+          successMessage.classList.remove('show');
+        }, 6000);
+      });
+    })();
+  </script>
+</body>
+</html>

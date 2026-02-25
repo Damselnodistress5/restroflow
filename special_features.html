@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Account — RestroFlow</title>
+  <style>
+    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    .container{max-width:1100px;margin:20px auto;padding:16px}
+    a.back{display:inline-block;margin-bottom:12px;color:var(--primary);text-decoration:none}
+    h1{margin:6px 0 20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+    .card{background:#fff;padding:16px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+    .card h3{margin-top:0;margin-bottom:8px;color:var(--primary);font-size:1.1rem}
+    .card p{margin:0 0 12px;color:#666;font-size:0.95rem;line-height:1.5}
+    input,select,textarea{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);width:100%;font-family:inherit}
+    input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(130,108,215,0.1)}
+    .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem}
+    .btn-secondary{background:transparent;border:1px solid var(--primary);color:var(--primary)}
+    .btn-apply{background:var(--primary);color:#fff;padding:8px 12px;flex-shrink:0}
+    .muted{color:#6b6b6b;font-size:0.9rem}
+    
+    /* Points display */
+    .points-display{background:linear-gradient(135deg,#826cd7,#a68ce4);color:#fff;padding:16px;border-radius:10px;text-align:center;margin:12px 0}
+    .points-display .value{font-size:2rem;font-weight:800}
+    .points-display .label{font-size:0.9rem;opacity:0.9}
+
+    /* Coupon list */
+    .coupon{background:#f7f2ff;padding:10px;border-radius:8px;margin-bottom:8px;border-left:4px solid var(--primary)}
+    .coupon-code{font-weight:700;color:var(--primary)}
+    .coupon-desc{font-size:0.85rem;color:#666;margin-top:4px}
+
+    /* Stats */
+    .stat-box{text-align:center;padding:12px;background:#f7f7fb;border-radius:8px}
+    .stat-value{font-size:1.5rem;font-weight:800;color:var(--primary)}
+    .stat-label{font-size:0.85rem;color:#666;margin-top:4px}
+
+    /* Promo input group */
+    .input-group{display:flex;gap:8px;margin-top:8px}
+    .input-group input{flex:1}
+
+    /* Checkbox list */
+    .checkbox-list{margin-top:8px}
+    .checkbox-item{display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer}
+    .checkbox-item input[type=checkbox]{cursor:pointer;width:18px;height:18px}
+    .checkbox-item label{cursor:pointer;flex:1;margin:0}
+
+    /* Status timeline */
+    .timeline{margin-top:12px}
+    .timeline-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+    .timeline-dot{width:12px;height:12px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:4px}
+    .timeline-dot.done{background:#067a3b}
+    .timeline-content{flex:1}
+    .timeline-label{font-weight:700;font-size:0.9rem}
+    .timeline-time{font-size:0.85rem;color:#666}
+
+    /* Recent order */
+    .recent-order{background:#f7f7fb;padding:12px;border-radius:8px;margin-top:8px}
+    .order-header{font-weight:700;margin-bottom:6px}
+    .order-items{font-size:0.85rem;color:#666;margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="home_page.html">← Back to Home</a>
+    <h1>My Account & Preferences</h1>
+
+    <div class="grid">
+      <!-- My Rewards & Points -->
+      <div class="card">
+        <h3>My Rewards & Points</h3>
+        <p>Track your loyalty points and redeem them for free meals.</p>
+        <div class="points-display">
+          <div class="value">450</div>
+          <div class="label">Current Balance</div>
+        </div>
+        <button class="btn btn-secondary" style="width:100%">Redeem Points</button>
+        <div class="muted" style="margin-top:8px">💡 Earn 1 point for every ₹10 spent</div>
+      </div>
+
+      <!-- Today's Offers & Coupons -->
+      <div class="card">
+        <h3>Today's Offers & Coupons</h3>
+        <p>Apply these exclusive deals to your next order.</p>
+        <div class="coupon">
+          <div class="coupon-code">FLAT20</div>
+          <div class="coupon-desc">20% off on orders above ₹500</div>
+        </div>
+        <div class="coupon">
+          <div class="coupon-code">FREEDESSERT</div>
+          <div class="coupon-desc">Free dessert on weekend dinners above ₹1000</div>
+        </div>
+        <div class="coupon">
+          <div class="coupon-code">VEG100</div>
+          <div class="coupon-desc">Flat ₹100 off on pure veg combos</div>
+        </div>
+        <div class="input-group">
+          <input type="text" id="promoCode" placeholder="Enter Promo Code" />
+          <button class="btn btn-apply">Apply</button>
+        </div>
+      </div>
+
+      <!-- My Order History -->
+      <div class="card">
+        <h3>My Order History</h3>
+        <p>Quickly reorder your favorite meals.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="stat-box">
+            <div class="stat-value">12</div>
+            <div class="stat-label">Total Orders</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" style="font-size:1rem">Paneer Butter Masala</div>
+            <div class="stat-label">Favorite Dish</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">₹450</div>
+            <div class="stat-label">Saved</div>
+          </div>
+        </div>
+        <div class="recent-order">
+          <div class="order-header">Order #O2024 — Yesterday at 7:30 PM</div>
+          <div class="order-items">Paneer Butter Masala, Naan, Mango Lassi</div>
+          <button class="btn" style="width:100%;margin-top:8px">Reorder</button>
+        </div>
+      </div>
+
+      <!-- Dietary Preferences -->
+      <div class="card">
+        <h3>Dietary Preferences</h3>
+        <p>Set your food preferences for tailored menu suggestions.</p>
+        <div class="checkbox-list">
+          <div class="checkbox-item">
+            <input type="checkbox" id="veg" checked />
+            <label for="veg">Pure Veg</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="jain" />
+            <label for="jain">Jain Food (No Onion/Garlic)</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="glutenfree" />
+            <label for="glutenfree">Gluten-Free</label>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <label style="font-weight:700;font-size:0.9rem">Spicy Level</label>
+          <select style="margin-top:6px">
+            <option value="mild">Mild</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hot">Hot</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Active Order Tracking -->
+      <div class="card">
+        <h3>Active Order Tracking</h3>
+        <p>Track your current table service or delivery status.</p>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">Order Placed</div>
+              <div class="timeline-time">5:45 PM</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">Preparing in Kitchen</div>
+              <div class="timeline-time">5:50 PM</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">Ready to Serve</div>
+              <div class="timeline-time">Est. 6:10 PM</div>
+            </div>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:12px">⏱️ Estimated wait: 15 minutes</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      // Promo code apply functionality
+      const promoInput = document.getElementById('promoCode');
+      const applyBtn = document.querySelector('.btn-apply');
+      
+      applyBtn.addEventListener('click', ()=>{
+        const code = promoInput.value.trim();
+        if(!code){ alert('Please enter a promo code'); return; }
+        alert(`Promo code "${code}" applied successfully!`);
+        promoInput.value = '';
+      });
+
+      // Dietary preference change handlers
+      const preferences = JSON.parse(localStorage.getItem('rf_preferences')||'{"veg":true,"jain":false,"glutenfree":false,"spicy":"medium"}');
+      
+      document.getElementById('veg').checked = preferences.veg;
+      document.getElementById('jain').checked = preferences.jain;
+      document.getElementById('glutenfree').checked = preferences.glutenfree;
+      document.querySelector('select').value = preferences.spicy;
+
+      [document.getElementById('veg'), document.getElementById('jain'), document.getElementById('glutenfree')].forEach(cb=>{
+        cb.addEventListener('change', (e)=>{
+          preferences[e.target.id] = e.target.checked;
+          localStorage.setItem('rf_preferences', JSON.stringify(preferences));
+        });
+      });
+
+      document.querySelector('select').addEventListener('change', (e)=>{
+        preferences.spicy = e.target.value;
+        localStorage.setItem('rf_preferences', JSON.stringify(preferences));
+      });
+
+      // Redeem points button
+      document.querySelector('.btn-secondary').addEventListener('click', ()=>{
+        alert('Points redemption feature - connect with our customer service for available redemption options!');
+      });
+    })();
+  </script>
+</body>
+</html>

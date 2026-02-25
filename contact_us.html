@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact Us — RestroFlow</title>
+  <style>
+    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    .container{max-width:1100px;margin:20px auto;padding:16px}
+    a.back{display:inline-block;margin-bottom:12px;color:var(--primary);text-decoration:none;font-weight:700}
+    
+    h1{margin:6px 0 12px;font-size:2rem}
+    .subtitle{color:#666;font-size:1.05rem;margin-bottom:24px;line-height:1.6;max-width:800px}
+    
+    .layout{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px}
+    
+    /* Left Column - Contact Info */
+    .contact-section h2{color:var(--primary);font-size:1.3rem;margin-top:0;margin-bottom:20px}
+    
+    .contact-card{background:#fff;padding:16px;border-radius:12px;border-left:4px solid var(--primary);margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+    .contact-card h3{margin:0 0 6px;color:var(--primary);font-size:1rem}
+    .contact-card p{margin:0;color:#666;font-size:0.95rem;font-weight:500}
+    
+    /* Right Column - Form */
+    .form-section{background:#fff;padding:24px;border-radius:12px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+    .form-section h2{color:var(--primary);font-size:1.3rem;margin-top:0;margin-bottom:16px}
+    
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-weight:700;margin-bottom:6px;color:var(--text);font-size:0.95rem}
+    
+    input,select,textarea{
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.1);
+      width:100%;
+      font-family:inherit;
+      font-size:0.95rem;
+      box-sizing:border-box;
+    }
+    
+    input:focus,select:focus,textarea:focus{
+      outline:none;
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(130,108,215,0.1);
+    }
+    
+    textarea{
+      resize:vertical;
+      min-height:120px;
+    }
+    
+    .btn{
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:0;
+      background:var(--primary);
+      color:#fff;
+      cursor:pointer;
+      font-weight:700;
+      font-size:1rem;
+      transition:all 0.2s;
+    }
+    
+    .btn:hover{
+      opacity:0.9;
+      transform:translateY(-1px);
+      box-shadow:0 4px 12px rgba(130,108,215,0.3);
+    }
+    
+    .form-success{
+      display:none;
+      background:#e9f7ef;
+      color:#067a3b;
+      padding:12px;
+      border-radius:8px;
+      border-left:4px solid #067a3b;
+      margin-bottom:16px;
+      font-weight:700;
+    }
+    
+    .form-success.show{
+      display:block;
+    }
+    
+    /* Icon styling */
+    .contact-icon{
+      font-size:1.5rem;
+      margin-right:8px;
+      display:inline-block;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px){
+      .layout{
+        grid-template-columns:1fr;
+        gap:24px;
+      }
+      
+      h1{
+        font-size:1.5rem;
+      }
+      
+      .subtitle{
+        font-size:1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="home_page.html">← Back to Home</a>
+    <h1>Contact Us</h1>
+    <p class="subtitle">We love hearing from you! Whether you have a question about our menu, need help with an order, or want to reserve a table, drop us a line.</p>
+
+    <div class="layout">
+      <!-- Left Column: Contact Information -->
+      <div class="contact-section">
+        <h2>Get In Touch</h2>
+        
+        <div class="contact-card">
+          <div>
+            <span class="contact-icon">📧</span>
+          </div>
+          <h3>Email</h3>
+          <p><a href="mailto:hello@restroflow.com" style="color:var(--primary);text-decoration:none">hello@restroflow.com</a></p>
+        </div>
+
+        <div class="contact-card">
+          <div>
+            <span class="contact-icon">📱</span>
+          </div>
+          <h3>Phone</h3>
+          <p><a href="tel:+919876543210" style="color:var(--primary);text-decoration:none">+91 98765 43210</a></p>
+        </div>
+
+        <div class="contact-card">
+          <div>
+            <span class="contact-icon">📍</span>
+          </div>
+          <h3>Location</h3>
+          <p>RestroFlow<br/>AB Road, Indore<br/>Madhya Pradesh 452001</p>
+        </div>
+
+        <div class="contact-card">
+          <div>
+            <span class="contact-icon">🕐</span>
+          </div>
+          <h3>Hours of Operation</h3>
+          <p>Open Daily<br/>11:00 AM - 11:00 PM</p>
+        </div>
+      </div>
+
+      <!-- Right Column: Contact Form -->
+      <div class="form-section">
+        <h2>Send Us a Message</h2>
+        
+        <div class="form-success" id="formSuccess">✓ Thank you! Your message has been sent successfully. We'll get back to you soon.</div>
+        
+        <form id="contactForm">
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" placeholder="your.email@example.com" required />
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number (Optional)</label>
+            <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" />
+          </div>
+
+          <div class="form-group">
+            <label for="category">What can we help you with? *</label>
+            <select id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option value="general">General Inquiry</option>
+              <option value="order-issue">Order Issue / Refund</option>
+              <option value="reservation">Table Reservation</option>
+              <option value="feedback">Menu Feedback</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea id="message" name="message" placeholder="Tell us what's on your mind..." required rows="5"></textarea>
+          </div>
+
+          <button type="submit" class="btn">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const contactForm = document.getElementById('contactForm');
+      const formSuccess = document.getElementById('formSuccess');
+
+      contactForm.addEventListener('submit', (e)=>{
+        e.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const category = document.getElementById('category').value;
+        const message = document.getElementById('message').value.trim();
+
+        if(!name || !email || !category || !message){
+          alert('Please fill in all required fields');
+          return;
+        }
+
+        // Save message to localStorage
+        const messages = JSON.parse(localStorage.getItem('contact_messages')||'[]');
+        const contactMessage = {
+          id: 'MSG'+Date.now(),
+          name,
+          email,
+          phone: phone || 'N/A',
+          category,
+          message,
+          submitted: new Date().toLocaleString(),
+          status: 'pending'
+        };
+        
+        messages.push(contactMessage);
+        localStorage.setItem('contact_messages', JSON.stringify(messages));
+
+        // Show success message
+        formSuccess.classList.add('show');
+        
+        // Reset form
+        contactForm.reset();
+
+        // Hide success message after 5 seconds
+        setTimeout(()=>{
+          formSuccess.classList.remove('show');
+        }, 5000);
+      });
+    })();
+  </script>
+</body>
+</html>

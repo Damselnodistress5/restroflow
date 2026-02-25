@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dine — RestroFlow</title>
+  <style>
+    :root{ --primary:#826cd7; --bg:#fff8f3; --text:#2e2e2e; }
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    .container{max-width:1400px;margin:20px auto;padding:16px}
+    a.back{display:inline-block;margin-bottom:12px;color:var(--primary);text-decoration:none}
+    h1{margin:6px 0 12px}
+
+    /* Location Controls */
+    .location-controls{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+    .search-input,.location-select{padding:10px 12px;border:1px solid rgba(0,0,0,0.1);border-radius:8px;font-size:0.95rem;font-family:inherit}
+    .search-input{flex:1;min-width:200px}
+    .location-select{min-width:180px}
+    .search-input:focus,.location-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(130,108,215,0.1)}
+
+    /* Table plan */
+    .table-plan{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:48px;padding:32px;width:100%}
+    .table{background:#fff;padding:16px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:10px;align-items:center;overflow:hidden;width:100%;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+    .table .num{font-weight:800;color:var(--primary);text-align:center;font-size:1.1rem}
+    .table .seats{font-size:0.9rem;color:#666;text-align:center}
+    .status{padding:6px 8px;border-radius:8px;font-weight:700;font-size:0.85rem;text-align:center}
+    .available{background:#e9f7ef;color:#067a3b}
+    .occupied{background:#fff3e6;color:#b65b00}
+    .reserved{background:#eef2ff;color:#3b2f9b}
+    .cleaning{background:#fff0f6;color:#aa1f57}
+
+    .table .actions{display:flex;gap:6px;width:100%;flex-direction:column}
+    .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer;font-weight:700;font-size:0.85rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .btn.primary{background:var(--primary);color:#fff}
+    .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+    /* Modal / toast */
+    .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12);display:none;z-index:200}
+    .modal.show{display:block}
+    .toast{position:fixed;right:20px;bottom:20px;background:#222;color:#fff;padding:10px 14px;border-radius:8px;opacity:0.95}
+
+    small.muted{color:#6b6b6b}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="home_page.html">← Back to Home</a>
+    <h1>Dine — Customer View</h1>
+
+    <div class="location-controls">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search tables...">
+      <select class="location-select" id="locationSelect">
+        <option value="downtown">Downtown Branch</option>
+        <option value="uptown">Uptown Branch</option>
+        <option value="riverside">Riverside Branch</option>
+      </select>
+    </div>
+
+    <h2>Table Plan</h2>
+    <p class="muted">Tap a table to view details, reserve or call a waiter.</p>
+    <div id="tablePlan" class="table-plan" aria-live="polite"></div>
+  </div>
+
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div id="modalContent"></div>
+    <div style="margin-top:12px;text-align:right"><button id="modalClose" class="btn ghost">Close</button></div>
+  </div>
+
+  <div id="toast" class="toast" style="display:none"></div>
+
+  <script>
+    (function(){
+      const tables = [
+        {id:1,seats:2,status:'available',eta:0,waiter:null},
+        {id:2,seats:4,status:'occupied',eta:12,waiter:'Ravi'},
+        {id:3,seats:4,status:'reserved',eta:8,waiter:null},
+        {id:4,seats:6,status:'available',eta:0,waiter:null},
+        {id:5,seats:2,status:'cleaning',eta:5,waiter:null},
+        {id:6,seats:4,status:'occupied',eta:20,waiter:'Asha'},
+        {id:7,seats:2,status:'available',eta:0,waiter:null},
+        {id:8,seats:6,status:'reserved',eta:15,waiter:null},
+        {id:9,seats:4,status:'cleaning',eta:3,waiter:null},
+        {id:10,seats:8,status:'occupied',eta:18,waiter:'Kiran'},
+        {id:11,seats:2,status:'available',eta:0,waiter:null},
+        {id:12,seats:4,status:'occupied',eta:9,waiter:'Maya'}
+      ];
+
+      const waiterNames = ['Ravi','Asha','Kiran','Maya','Vikram'];
+
+      const tablePlanEl = document.getElementById('tablePlan');
+      const modal = document.getElementById('modal');
+      const modalContent = document.getElementById('modalContent');
+      const modalClose = document.getElementById('modalClose');
+      const toast = document.getElementById('toast');
+      const searchInput = document.getElementById('searchInput');
+      const locationSelect = document.getElementById('locationSelect');
+
+      function statusClass(s){ return s==='available'? 'available' : s==='occupied'? 'occupied' : s==='reserved'? 'reserved' : 'cleaning'; }
+
+      function renderTables(){
+        tablePlanEl.innerHTML = '';
+        tables.forEach(t=>{
+          const el = document.createElement('div'); el.className='table'; el.tabIndex=0;
+          el.innerHTML = `
+            <div class="num">Table ${t.id}</div>
+            <div class="seats">Seats: ${t.seats}</div>
+            <div class="status ${statusClass(t.status)}">${t.status.toUpperCase()}</div>
+            <small class="muted">ETA: ${t.eta>0? t.eta+' min' : '—'}</small>
+            <div class="actions">
+              <button class="btn primary" data-act="view" data-id="${t.id}">Details</button>
+              <button class="btn ghost" data-act="waiter" data-id="${t.id}">Request Waiter</button>
+            </div>
+          `;
+
+          el.querySelector('[data-act=view]').addEventListener('click', ()=>openDetails(t.id));
+          el.querySelector('[data-act=waiter]').addEventListener('click', ()=>requestWaiter(t.id));
+
+          tablePlanEl.appendChild(el);
+        });
+      }
+
+      function openDetails(id){
+        const t = tables.find(x=>x.id===id);
+        modalContent.innerHTML = `<h3>Table ${t.id} — ${t.seats} seats</h3>
+          <p>Status: <strong>${t.status}</strong></p>
+          <p>Estimated service time: <strong>${t.eta>0? t.eta+' minutes' : 'No wait'}</strong></p>
+          <p>Assigned waiter: <strong>${t.waiter || 'Not assigned'}</strong></p>
+          <div style="margin-top:8px">
+            ${t.status==='available'? `<button id="reserveBtn" class="btn primary">Reserve this table</button>`:''}
+            <button id="callBtn" class="btn ghost">Request Waiter</button>
+          </div>`;
+
+        modal.classList.add('show');
+
+        const reserveBtn = document.getElementById('reserveBtn');
+        const callBtn = document.getElementById('callBtn');
+        reserveBtn && reserveBtn.addEventListener('click', ()=>{ reserveTable(id); modal.classList.remove('show'); });
+        callBtn && callBtn.addEventListener('click', ()=>{ requestWaiter(id); });
+      }
+
+      function reserveTable(id){
+        const t = tables.find(x=>x.id===id);
+        if(t.status!=='available'){ showToast('Table not available for reservation'); return; }
+        t.status = 'reserved';
+        t.eta = 10;
+        showToast(`Table ${id} reserved for you`);
+        renderTables();
+      }
+
+      function requestWaiter(id){
+        const t = tables.find(x=>x.id===id);
+        const name = waiterNames[Math.floor(Math.random()*waiterNames.length)];
+        t.waiter = name;
+        showToast(`Waiter ${name} is on the way to Table ${id}`);
+        renderTables();
+      }
+
+      function showToast(msg,dur=3000){
+        toast.style.display='block'; toast.textContent = msg;
+        setTimeout(()=>{ toast.style.display='none'; }, dur);
+      }
+
+      modalClose.addEventListener('click', ()=> modal.classList.remove('show'));
+
+      // Location and Search handlers
+      locationSelect.addEventListener('change', (e)=>{
+        showToast(`Switched to ${e.target.options[e.target.selectedIndex].text}`);
+      });
+
+      searchInput.addEventListener('input', (e)=>{
+        const query = e.target.value.toLowerCase();
+        if(query.length > 0){
+          showToast(`Searching for: ${query}`);
+        }
+      });
+
+      // Simulate passing time for occupied tables
+      setInterval(()=>{
+        tables.forEach(t=>{
+          if(t.status==='occupied' && t.eta>0){ t.eta = Math.max(0, t.eta-1); }
+          if(t.status==='reserved' && t.eta>0){ t.eta = Math.max(0, t.eta-1); if(t.eta===0) t.status='occupied'; }
+          if(t.status==='cleaning' && t.eta>0){ t.eta = Math.max(0, t.eta-1); if(t.eta===0) t.status='available'; }
+        });
+        renderTables();
+      }, 60*1000);
+
+      // initial render
+      renderTables();
+
+      // keyboard accessibility: open details on Enter when focused
+      tablePlanEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const btn = e.target.querySelector('[data-act=view]'); btn && btn.click(); } });
+    })();
+  </script>
+</body>
+</html>
