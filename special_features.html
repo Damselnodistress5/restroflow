@@ -8,14 +8,22 @@
     :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e}
     body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
     .container{max-width:1100px;margin:20px auto;padding:16px}
-    a.back{display:inline-block;margin-bottom:12px;color:var(--primary);text-decoration:none}
-    h1{margin:6px 0 20px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+    
+    /* Header Navigation */
+    .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    a.back, a.return-bill { text-decoration: none; font-weight: 700; padding: 8px 16px; border-radius: 8px; transition: 0.2s; }
+    a.back{ color: var(--primary); }
+    a.return-bill { background: var(--primary); color: #fff; display: none; } /* Hidden by default */
+    
+    h1{margin:0; font-size: 1.8rem;}
+    
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px; margin-top: 20px;}
     .card{background:#fff;padding:16px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
     .card h3{margin-top:0;margin-bottom:8px;color:var(--primary);font-size:1.1rem}
     .card p{margin:0 0 12px;color:#666;font-size:0.95rem;line-height:1.5}
     input,select,textarea{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);width:100%;font-family:inherit}
     input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(130,108,215,0.1)}
+    
     .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem}
     .btn-secondary{background:transparent;border:1px solid var(--primary);color:var(--primary)}
     .btn-apply{background:var(--primary);color:#fff;padding:8px 12px;flex-shrink:0}
@@ -27,7 +35,8 @@
     .points-display .label{font-size:0.9rem;opacity:0.9}
 
     /* Coupon list */
-    .coupon{background:#f7f2ff;padding:10px;border-radius:8px;margin-bottom:8px;border-left:4px solid var(--primary)}
+    .coupon{background:#f7f2ff;padding:10px;border-radius:8px;margin-bottom:8px;border-left:4px solid var(--primary); cursor: pointer; transition: 0.2s;}
+    .coupon:hover { background: #efe7ff; }
     .coupon-code{font-weight:700;color:var(--primary)}
     .coupon-desc{font-size:0.85rem;color:#666;margin-top:4px}
 
@@ -63,11 +72,13 @@
 </head>
 <body>
   <div class="container">
-    <a class="back" href="home_page.html">← Back to Home</a>
-    <h1>My Account & Preferences</h1>
+    <div class="nav-header">
+      <a class="back" href="home_page.html">← Back to Home</a>
+      <h1>My Account & Preferences</h1>
+      <a class="return-bill" id="returnToBill" href="billing.html">Back to My Bill →</a>
+    </div>
 
     <div class="grid">
-      <!-- My Rewards & Points -->
       <div class="card">
         <h3>My Rewards & Points</h3>
         <p>Track your loyalty points and redeem them for free meals.</p>
@@ -79,29 +90,26 @@
         <div class="muted" style="margin-top:8px">💡 Earn 1 point for every ₹10 spent</div>
       </div>
 
-      <!-- Today's Offers & Coupons -->
       <div class="card">
         <h3>Today's Offers & Coupons</h3>
-        <p>Apply these exclusive deals to your next order.</p>
-        <div class="coupon">
-          <div class="coupon-code">FLAT20</div>
-          <div class="coupon-desc">20% off on orders above ₹500</div>
+        <p>Click a coupon to copy it or enter a code below.</p>
+        
+        <div class="coupon" onclick="applyCoupon('SAVE10')">
+          <div class="coupon-code">SAVE10</div>
+          <div class="coupon-desc">10% off for Special Members (Apply now)</div>
         </div>
-        <div class="coupon">
-          <div class="coupon-code">FREEDESSERT</div>
-          <div class="coupon-desc">Free dessert on weekend dinners above ₹1000</div>
-        </div>
+        
         <div class="coupon">
           <div class="coupon-code">VEG100</div>
           <div class="coupon-desc">Flat ₹100 off on pure veg combos</div>
         </div>
+
         <div class="input-group">
           <input type="text" id="promoCode" placeholder="Enter Promo Code" />
           <button class="btn btn-apply">Apply</button>
         </div>
       </div>
 
-      <!-- My Order History -->
       <div class="card">
         <h3>My Order History</h3>
         <p>Quickly reorder your favorite meals.</p>
@@ -111,8 +119,8 @@
             <div class="stat-label">Total Orders</div>
           </div>
           <div class="stat-box">
-            <div class="stat-value" style="font-size:1rem">Paneer Butter Masala</div>
-            <div class="stat-label">Favorite Dish</div>
+            <div class="stat-value" style="font-size:0.8rem">Dal Makhani</div>
+            <div class="stat-label">Favorite</div>
           </div>
           <div class="stat-box">
             <div class="stat-value">₹450</div>
@@ -120,13 +128,12 @@
           </div>
         </div>
         <div class="recent-order">
-          <div class="order-header">Order #O2024 — Yesterday at 7:30 PM</div>
-          <div class="order-items">Paneer Butter Masala, Naan, Mango Lassi</div>
+          <div class="order-header">Order #O2024 — Yesterday</div>
+          <div class="order-items">Dal Makhani, Butter Naan, Lassi</div>
           <button class="btn" style="width:100%;margin-top:8px">Reorder</button>
         </div>
       </div>
 
-      <!-- Dietary Preferences -->
       <div class="card">
         <h3>Dietary Preferences</h3>
         <p>Set your food preferences for tailored menu suggestions.</p>
@@ -144,20 +151,10 @@
             <label for="glutenfree">Gluten-Free</label>
           </div>
         </div>
-        <div style="margin-top:12px">
-          <label style="font-weight:700;font-size:0.9rem">Spicy Level</label>
-          <select style="margin-top:6px">
-            <option value="mild">Mild</option>
-            <option value="medium" selected>Medium</option>
-            <option value="hot">Hot</option>
-          </select>
-        </div>
       </div>
 
-      <!-- Active Order Tracking -->
       <div class="card">
         <h3>Active Order Tracking</h3>
-        <p>Track your current table service or delivery status.</p>
         <div class="timeline">
           <div class="timeline-item">
             <div class="timeline-dot done"></div>
@@ -181,22 +178,40 @@
             </div>
           </div>
         </div>
-        <div class="muted" style="margin-top:12px">⏱️ Estimated wait: 15 minutes</div>
       </div>
     </div>
   </div>
 
   <script>
+    // Global function to apply coupon and go back
+    window.applyCoupon = function(code) {
+        if(code === 'SAVE10') {
+            localStorage.setItem('active_coupon', 'SAVE10');
+            alert('Coupon SAVE10 applied! Returning to your bill.');
+            window.location.href = 'billing.html';
+        } else {
+            alert('This coupon is currently unavailable.');
+        }
+    };
+
     (function(){
+      // Logic to show "Return to Bill" button only if user has an active cart
+      const cart = localStorage.getItem('current_cart');
+      if (cart && JSON.parse(cart).length > 0) {
+          document.getElementById('returnToBill').style.display = 'block';
+      }
+
       // Promo code apply functionality
       const promoInput = document.getElementById('promoCode');
       const applyBtn = document.querySelector('.btn-apply');
       
       applyBtn.addEventListener('click', ()=>{
-        const code = promoInput.value.trim();
-        if(!code){ alert('Please enter a promo code'); return; }
-        alert(`Promo code "${code}" applied successfully!`);
-        promoInput.value = '';
+        const code = promoInput.value.trim().toUpperCase();
+        if(code === 'SAVE10') {
+            applyCoupon(code);
+        } else {
+            alert('Invalid Promo Code');
+        }
       });
 
       // Dietary preference change handlers
@@ -205,7 +220,6 @@
       document.getElementById('veg').checked = preferences.veg;
       document.getElementById('jain').checked = preferences.jain;
       document.getElementById('glutenfree').checked = preferences.glutenfree;
-      document.querySelector('select').value = preferences.spicy;
 
       [document.getElementById('veg'), document.getElementById('jain'), document.getElementById('glutenfree')].forEach(cb=>{
         cb.addEventListener('change', (e)=>{
@@ -214,14 +228,9 @@
         });
       });
 
-      document.querySelector('select').addEventListener('change', (e)=>{
-        preferences.spicy = e.target.value;
-        localStorage.setItem('rf_preferences', JSON.stringify(preferences));
-      });
-
       // Redeem points button
       document.querySelector('.btn-secondary').addEventListener('click', ()=>{
-        alert('Points redemption feature - connect with our customer service for available redemption options!');
+        alert('You have 450 points! You need 500 points to redeem a free starter.');
       });
     })();
   </script>

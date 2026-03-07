@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Bill — RestroFlow</title>
   <style>
-    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e;--success:#067a3b}
+    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e;--success:#067a3b;--warning:#eab308}
     body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
-    .container{max-width:500px;margin:0 auto;padding:16px;min-height:100vh}
+    .container{max-width:500px;margin:0 auto;padding:16px;min-height:100vh; padding-bottom: 60px;}
     a.back{display:inline-block;margin-bottom:12px;color:var(--primary);text-decoration:none;font-weight:700}
     h1{margin:6px 0 20px;font-size:1.5rem}
     h2{font-size:1.1rem;color:var(--primary);margin:16px 0 12px;font-weight:700}
@@ -16,8 +16,10 @@
     .receipt{background:#fff;padding:20px;border-radius:12px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 12px rgba(0,0,0,0.08);margin-bottom:16px}
     
     /* Order Items */
-    .receipt-header{text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e0e0e0}
+    .receipt-header{text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px dashed #e0e0e0}
     .receipt-header h3{margin:0;color:var(--primary);font-size:1.2rem}
+    .dietary-notes{background:#fff3cd; color:#856404; padding:8px; border-radius:6px; font-size:0.85rem; margin-top:8px; display:none; text-align: left;}
+    
     .receipt-table{display:table;width:100%;margin-bottom:12px}
     .receipt-row{display:table-row;padding:8px 0}
     .receipt-row.header{font-weight:700;border-bottom:1px solid #e0e0e0;margin-bottom:8px}
@@ -28,11 +30,16 @@
     .item-qty{color:#666;font-size:0.9rem}
     .item-price{font-weight:700}
 
+    /* Coupon Section */
+    .coupon-section { background:#f8f9fa; border: 1px dashed var(--primary); padding: 12px; border-radius: 8px; margin-top: 16px; text-align: center; }
+    .coupon-btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 8px;}
+    .applied-discount { color: var(--success); font-weight: bold; display: none; margin-top: 8px;}
+
     /* Cost Breakdown */
     .breakdown{background:#f7f7fb;padding:12px;border-radius:8px;margin-top:16px}
     .breakdown-row{display:flex;justify-content:space-between;padding:8px 0;font-size:0.95rem}
+    .breakdown-row.discount-row{color: var(--success); display: none;}
     .breakdown-row.total{border-top:2px solid var(--primary);padding-top:12px;font-weight:700;color:var(--primary)}
-    .breakdown-row.grand-total{font-size:1.4rem;color:var(--primary);padding-top:12px;margin-top:8px;border-top:2px solid var(--primary)}
     .breakdown-label{color:#666}
     .breakdown-value{font-weight:700;text-align:right}
 
@@ -67,47 +74,54 @@
     .qr-placeholder.active{display:block}
     .qr-box{background:#fff;border:2px dashed var(--primary);border-radius:8px;width:120px;height:120px;margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--primary);font-weight:700;font-size:2rem}
 
-    /* Support Section */
-    .support-section{display:flex;gap:12px;margin-top:16px}
-    .support-link{flex:1;padding:10px;border:1px solid var(--primary);color:var(--primary);background:#fff;border-radius:8px;text-align:center;text-decoration:none;font-weight:700;cursor:pointer;font-size:0.9rem;transition:all 0.2s}
-    .support-link:hover{background:#f7f2ff}
-
-    /* Success Message */
-    .success-msg{display:none;background:#e9f7ef;color:var(--success);padding:12px;border-radius:8px;border-left:4px solid var(--success);margin-bottom:16px;font-weight:700}
-    .success-msg.show{display:block}
+    /* Loading Overlay for Payment */
+    .payment-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
+    .payment-overlay.show { display: flex; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     .muted{color:#6b6b6b;font-size:0.9rem}
   </style>
 </head>
 <body>
   <div class="container">
-    <a class="back" href="dine.html">← Back to Table Plan</a>
+    <a class="back" href="order.html">← Back to Menu</a>
     <h1>Your Bill</h1>
 
-    <!-- Success Message -->
-    <div class="success-msg" id="successMsg">✓ Payment successful! Thank you for dining with us.</div>
+    <div class="payment-overlay" id="paymentOverlay">
+      <div class="spinner"></div>
+      <h2 style="color:var(--primary)">Processing Payment...</h2>
+      <p class="muted">Please do not close this window.</p>
+    </div>
 
-    <!-- Order Summary (Receipt-Style Card) -->
     <div class="receipt">
       <div class="receipt-header">
         <h3 id="orderTitle">Order Summary</h3>
-        <p class="muted" id="orderMeta">No active order selected</p>
+        <p class="muted" id="orderMeta">No active order</p>
+        <div id="dietaryDisplay" class="dietary-notes"></div>
       </div>
 
       <div id="itemsContainer" class="receipt-table">
-        <div class="receipt-row header">
-          <div class="receipt-cell">Item</div>
-          <div class="receipt-cell">Qty</div>
-          <div class="receipt-cell">Price</div>
         </div>
+
+      <div class="coupon-section" id="couponBox">
+        <div style="font-weight:bold; margin-bottom: 4px;">Have a Promo Code?</div>
+        <p class="muted" style="margin:0 0 8px; font-size: 0.85rem;">Find active offers on our Special Features page!</p>
+        <a href="special_features.html" class="coupon-btn">View Special Offers</a>
+        <div id="appliedDiscountText" class="applied-discount">🎉 10% Discount Applied!</div>
       </div>
 
-      <!-- Cost Breakdown -->
       <div class="breakdown">
         <div class="breakdown-row">
           <span class="breakdown-label">Subtotal</span>
           <span class="breakdown-value" id="subtotal">₹0</span>
         </div>
+        
+        <div class="breakdown-row discount-row" id="discountRow">
+          <span class="breakdown-label">Promo Discount</span>
+          <span class="breakdown-value" id="discountAmount">-₹0</span>
+        </div>
+
         <div class="breakdown-row">
           <span class="breakdown-label">CGST (2.5%)</span>
           <span class="breakdown-value" id="cgst">₹0</span>
@@ -117,19 +131,17 @@
           <span class="breakdown-value" id="sgst">₹0</span>
         </div>
         <div class="breakdown-row total">
-          <span class="breakdown-label">Service Charge (5%)</span>
-          <span class="breakdown-value" id="serviceCharge">₹0</span>
+          <span class="breakdown-label">Grand Total</span>
+          <span class="breakdown-value" id="finalCalcTotal">₹0</span>
         </div>
       </div>
     </div>
 
-    <!-- Grand Total -->
     <div class="grand-total-card">
       <div class="label">AMOUNT TO PAY</div>
       <div class="amount" id="grandTotal">₹0</div>
     </div>
 
-    <!-- Split Bill Feature -->
     <div class="split-section">
       <h2 style="margin-top:0">Split This Bill</h2>
       <div class="split-toggle">
@@ -139,18 +151,17 @@
       
       <div class="split-input-group active" id="equalSplitGroup">
         <label for="splitCount" style="font-weight:700">Split by</label>
-        <input type="number" id="splitCount" min="2" max="10" value="2" />
+        <input type="number" id="splitCount" min="1" max="20" value="1" />
         <span class="split-per-person" id="perPersonCost">₹0 per person</span>
       </div>
       
       <div class="split-input-group" id="itemsSplitGroup">
-        <p class="muted">Select which items you're paying for to calculate your portion.</p>
+        <p class="muted">Select which items you're paying for to calculate your portion. (Feature coming soon)</p>
       </div>
     </div>
 
-    <!-- Payment Methods -->
     <div class="payment-section">
-      <h2 style="margin-top:0">Choose Payment Method</h2>
+      <h2 style="margin-top:0">Select Payment & Checkout</h2>
       
       <button class="payment-btn" data-method="upi">
         <div class="payment-icon">📱</div>
@@ -160,7 +171,14 @@
         </div>
       </button>
 
-      <button class="payment-btn" data-method="card">
+      <div class="qr-placeholder" id="qrPlaceholder">
+        <p style="margin:0 0 8px;font-weight:700">Scan to Pay</p>
+        <div class="qr-box">🔲</div>
+        <p class="muted" style="margin:8px 0 0">Scan the QR code above with your UPI app</p>
+        <button class="coupon-btn" style="margin-top:12px; width:100%; background:#067a3b" onclick="processPayment()">I have paid</button>
+      </div>
+
+      <button class="payment-btn" data-method="card" onclick="processPayment()">
         <div class="payment-icon">💳</div>
         <div class="payment-btn-text">
           <div class="payment-method">Credit / Debit Card</div>
@@ -168,55 +186,59 @@
         </div>
       </button>
 
-      <button class="payment-btn" data-method="cash">
+      <button class="payment-btn" data-method="cash" onclick="processPayment()">
         <div class="payment-icon">💵</div>
         <div class="payment-btn-text">
           <div class="payment-method">Pay Cash at Counter</div>
-          <div class="payment-desc">Call for bill collection</div>
+          <div class="payment-desc">Call waiter for cash collection</div>
         </div>
       </button>
-
-      <!-- QR Code Placeholder (for UPI) -->
-      <div class="qr-placeholder" id="qrPlaceholder">
-        <p style="margin:0 0 8px;font-weight:700">Scan to Pay</p>
-        <div class="qr-box">🔲</div>
-        <p class="muted" style="margin:8px 0 0">Scan the QR code above with your UPI app</p>
-      </div>
-    </div>
-
-    <!-- Support Section -->
-    <div class="support-section">
-      <a href="#" class="support-link" id="downloadInvoice">📄 Download Invoice</a>
-      <a href="#" class="support-link" id="reportIssue">⚠️ Report Issue / Refund</a>
     </div>
   </div>
 
   <script>
     (function(){
-      let currentOrder = null;
       let currentGrandTotal = 0;
+      let appliedDiscountPercent = 0; // Will update if coupon found
 
       // Tax rates
       const CGST_RATE = 0.025;
       const SGST_RATE = 0.025;
-      const SERVICE_CHARGE_RATE = 0.05;
 
-      // Calculate totals
-      function calculateTotals(order){
-        if(!order || !order.items) return { subtotal: 0, cgst: 0, sgst: 0, serviceCharge: 0, grandTotal: 0 };
+      function loadBillData() {
+        // 1. Fetch data from localStorage (set by order.html)
+        const cartData = JSON.parse(localStorage.getItem('current_cart') || '[]');
+        const tableName = localStorage.getItem('current_table') || 'Takeaway';
+        const orderNotes = localStorage.getItem('current_order_notes') || '';
+        
+        // Check if user clicked a coupon on special_features.html
+        const activeCoupon = localStorage.getItem('active_coupon');
+        if (activeCoupon === 'SAVE10') {
+            appliedDiscountPercent = 0.10;
+            document.getElementById('appliedDiscountText').style.display = 'block';
+            document.getElementById('discountRow').style.display = 'flex';
+        }
 
-        const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const cgst = Math.round(subtotal * CGST_RATE);
-        const sgst = Math.round(subtotal * SGST_RATE);
-        const serviceCharge = Math.round(subtotal * SERVICE_CHARGE_RATE);
-        const grandTotal = subtotal + cgst + sgst + serviceCharge;
+        // Setup Header
+        document.getElementById('orderTitle').textContent = `Bill for ${tableName}`;
+        document.getElementById('orderMeta').textContent = `${cartData.length} items ordered`;
 
-        return { subtotal, cgst, sgst, serviceCharge, grandTotal };
-      }
+        // Display Dietary Notes if they exist
+        const notesDisplay = document.getElementById('dietaryDisplay');
+        if (orderNotes.trim() !== "") {
+            notesDisplay.style.display = 'block';
+            notesDisplay.innerHTML = `<strong>Kitchen Notes:</strong> ${orderNotes}`;
+        }
 
-      // Render order items
-      function renderOrderItems(order){
+        // Empty Cart State
         const container = document.getElementById('itemsContainer');
+        if (cartData.length === 0) {
+            container.innerHTML = '<div style="padding:20px;text-align:center;color:#999">No items ordered yet.</div>';
+            return;
+        }
+
+        // Render Items and Math
+        let subtotal = 0;
         container.innerHTML = `
           <div class="receipt-row header">
             <div class="receipt-cell">Item</div>
@@ -225,63 +247,40 @@
           </div>
         `;
 
-        if(order && order.items){
-          order.items.forEach(item => {
-            const totalPrice = item.price * item.qty;
+        cartData.forEach(item => {
+            const itemTotal = item.price * item.qty;
+            subtotal += itemTotal;
+            
             const row = document.createElement('div');
             row.className = 'receipt-row';
             row.innerHTML = `
-              <div class="receipt-cell">
-                <div class="item-name">${item.name}</div>
-              </div>
+              <div class="receipt-cell"><div class="item-name">${item.name}</div></div>
               <div class="receipt-cell">${item.qty}x</div>
-              <div class="receipt-cell"><span class="item-price">₹${totalPrice}</span></div>
+              <div class="receipt-cell"><span class="item-price">₹${itemTotal}</span></div>
             `;
             container.appendChild(row);
-          });
-        }
-      }
+        });
 
-      // Render totals
-      function renderTotals(order){
-        const totals = calculateTotals(order);
-        currentGrandTotal = totals.grandTotal;
+        // Calculations
+        const discountAmount = Math.round(subtotal * appliedDiscountPercent);
+        const subtotalAfterDiscount = subtotal - discountAmount;
+        
+        const cgst = Math.round(subtotalAfterDiscount * CGST_RATE);
+        const sgst = Math.round(subtotalAfterDiscount * SGST_RATE);
+        currentGrandTotal = subtotalAfterDiscount + cgst + sgst;
 
-        document.getElementById('subtotal').textContent = `₹${totals.subtotal}`;
-        document.getElementById('cgst').textContent = `₹${totals.cgst}`;
-        document.getElementById('sgst').textContent = `₹${totals.sgst}`;
-        document.getElementById('serviceCharge').textContent = `₹${totals.serviceCharge}`;
-        document.getElementById('grandTotal').textContent = `₹${totals.grandTotal}`;
+        // Update UI Text
+        document.getElementById('subtotal').textContent = `₹${subtotal}`;
+        if(discountAmount > 0) document.getElementById('discountAmount').textContent = `-₹${discountAmount}`;
+        document.getElementById('cgst').textContent = `₹${cgst}`;
+        document.getElementById('sgst').textContent = `₹${sgst}`;
+        document.getElementById('finalCalcTotal').textContent = `₹${currentGrandTotal}`;
+        document.getElementById('grandTotal').textContent = `₹${currentGrandTotal}`;
 
-        // Update split calculation
         updateSplitCost();
       }
 
-      // Load and display order
-      function loadOrder(){
-        const activeOrders = JSON.parse(localStorage.getItem('active_orders') || '[]');
-        
-        if(activeOrders.length > 0){
-          currentOrder = activeOrders[activeOrders.length - 1]; // Get the most recent order
-          
-          const orderTitle = document.getElementById('orderTitle');
-          const orderMeta = document.getElementById('orderMeta');
-          
-          orderTitle.textContent = `Order Summary - Table ${currentOrder.tableNumber}`;
-          const createdTime = new Date(currentOrder.created).toLocaleTimeString();
-          orderMeta.textContent = `Order #${currentOrder.orderId} • ${createdTime}`;
-          
-          renderOrderItems(currentOrder);
-          renderTotals(currentOrder);
-        } else {
-          document.getElementById('orderTitle').textContent = 'No Active Orders';
-          document.getElementById('orderMeta').textContent = 'Create an order from the Orders page to see billing';
-          document.getElementById('itemsContainer').innerHTML = '<div style="padding:20px;text-align:center;color:#999">No items to display</div>';
-          document.getElementById('grandTotal').textContent = '₹0';
-        }
-      }
-
-      // Split Bill Toggle
+      // Split Bill Logic
       const splitToggles = document.querySelectorAll('[data-split]');
       const equalSplitGroup = document.getElementById('equalSplitGroup');
       const itemsSplitGroup = document.getElementById('itemsSplitGroup');
@@ -309,17 +308,19 @@
         });
       });
 
-      splitCount.addEventListener('change', updateSplitCost);
+      splitCount.addEventListener('input', updateSplitCost);
 
-      // Payment Methods
+      // Payment Selection Logic
       const paymentBtns = document.querySelectorAll('[data-method]');
       const qrPlaceholder = document.getElementById('qrPlaceholder');
 
       paymentBtns.forEach(btn=>{
         btn.addEventListener('click', ()=>{
+          // Highlight selected
           paymentBtns.forEach(b=> b.classList.remove('active'));
           btn.classList.add('active');
           
+          // Show QR only for UPI
           if(btn.dataset.method === 'upi'){
             qrPlaceholder.classList.add('active');
           } else {
@@ -328,42 +329,25 @@
         });
       });
 
-      // Download Invoice
-      document.getElementById('downloadInvoice').addEventListener('click', (e)=>{
-        e.preventDefault();
-        alert('Generating digital invoice PDF... The invoice will be sent to your email and stored in your account.');
-      });
+      // Global Payment Processing Function
+      window.processPayment = function() {
+        // Show loading screen
+        const overlay = document.getElementById('paymentOverlay');
+        overlay.classList.add('show');
+        
+        // Clear the cart so they don't buy the same thing twice
+        localStorage.removeItem('current_cart');
+        localStorage.removeItem('active_coupon'); 
+        
+        // Wait 2 seconds, then redirect to feedback page
+        setTimeout(() => {
+           window.location.href = 'feedback.html'; 
+        }, 2000);
+      };
 
-      // Report Issue
-      document.getElementById('reportIssue').addEventListener('click', (e)=>{
-        e.preventDefault();
-        alert('Sorry to hear about the issue! Our team will review your request and process a refund if applicable. A staff member will contact you shortly.');
-      });
+      // Load bill immediately
+      loadBillData();
 
-      // Simulate payment
-      document.querySelectorAll('[data-method]').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          setTimeout(()=>{
-            alert(`Processing payment via ${btn.dataset.method}...`);
-            document.getElementById('successMsg').classList.add('show');
-            
-            // Move order from active to history
-            if(currentOrder){
-              let activeOrders = JSON.parse(localStorage.getItem('active_orders') || '[]');
-              activeOrders = activeOrders.filter(o => o.orderId !== currentOrder.orderId);
-              localStorage.setItem('active_orders', JSON.stringify(activeOrders));
-            }
-            
-            paymentBtns.forEach(b=> b.style.opacity = '0.5');
-          }, 1000);
-        });
-      });
-
-      // Listen for real-time updates
-      window.addEventListener('storage', loadOrder);
-      
-      // Initial load
-      loadOrder();
     })();
   </script>
 </body>
