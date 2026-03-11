@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Account — RestroFlow</title>
   <style>
-    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e}
+    :root{--primary:#826cd7;--bg:#fff8f3;--text:#2e2e2e;--success:#067a3b}
     body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--text)}
     .container{max-width:1100px;margin:20px auto;padding:16px}
     
-    /* Header Navigation */
     .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     a.back, a.return-bill { text-decoration: none; font-weight: 700; padding: 8px 16px; border-radius: 8px; transition: 0.2s; }
     a.back{ color: var(--primary); }
-    a.return-bill { background: var(--primary); color: #fff; display: none; } /* Hidden by default */
+    a.return-bill { background: var(--primary); color: #fff; display: none; }
     
     h1{margin:0; font-size: 1.8rem;}
     
@@ -21,53 +20,29 @@
     .card{background:#fff;padding:16px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
     .card h3{margin-top:0;margin-bottom:8px;color:var(--primary);font-size:1.1rem}
     .card p{margin:0 0 12px;color:#666;font-size:0.95rem;line-height:1.5}
-    input,select,textarea{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);width:100%;font-family:inherit}
-    input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(130,108,215,0.1)}
     
-    .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem}
+    .btn{padding:10px 12px;border-radius:8px;border:0;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem;width:100%}
     .btn-secondary{background:transparent;border:1px solid var(--primary);color:var(--primary)}
-    .btn-apply{background:var(--primary);color:#fff;padding:8px 12px;flex-shrink:0}
-    .muted{color:#6b6b6b;font-size:0.9rem}
+    .btn-apply{background:var(--primary);color:#fff;padding:8px 12px;flex-shrink:0;width:auto}
     
-    /* Points display */
     .points-display{background:linear-gradient(135deg,#826cd7,#a68ce4);color:#fff;padding:16px;border-radius:10px;text-align:center;margin:12px 0}
     .points-display .value{font-size:2rem;font-weight:800}
     .points-display .label{font-size:0.9rem;opacity:0.9}
 
-    /* Coupon list */
     .coupon{background:#f7f2ff;padding:10px;border-radius:8px;margin-bottom:8px;border-left:4px solid var(--primary); cursor: pointer; transition: 0.2s;}
-    .coupon:hover { background: #efe7ff; }
+    .coupon:hover { background: #efe7ff; border-left-width: 8px; }
     .coupon-code{font-weight:700;color:var(--primary)}
     .coupon-desc{font-size:0.85rem;color:#666;margin-top:4px}
 
-    /* Stats */
     .stat-box{text-align:center;padding:12px;background:#f7f7fb;border-radius:8px}
-    .stat-value{font-size:1.5rem;font-weight:800;color:var(--primary)}
+    .stat-value{font-size:1.3rem;font-weight:800;color:var(--primary)}
     .stat-label{font-size:0.85rem;color:#666;margin-top:4px}
 
-    /* Promo input group */
     .input-group{display:flex;gap:8px;margin-top:8px}
-    .input-group input{flex:1}
+    .input-group input{flex:1; padding:8px; border-radius:8px; border:1px solid #ddd}
 
-    /* Checkbox list */
-    .checkbox-list{margin-top:8px}
-    .checkbox-item{display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer}
-    .checkbox-item input[type=checkbox]{cursor:pointer;width:18px;height:18px}
-    .checkbox-item label{cursor:pointer;flex:1;margin:0}
-
-    /* Status timeline */
-    .timeline{margin-top:12px}
-    .timeline-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
-    .timeline-dot{width:12px;height:12px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:4px}
-    .timeline-dot.done{background:#067a3b}
-    .timeline-content{flex:1}
-    .timeline-label{font-weight:700;font-size:0.9rem}
-    .timeline-time{font-size:0.85rem;color:#666}
-
-    /* Recent order */
-    .recent-order{background:#f7f7fb;padding:12px;border-radius:8px;margin-top:8px}
-    .order-header{font-weight:700;margin-bottom:6px}
-    .order-items{font-size:0.85rem;color:#666;margin-bottom:8px}
+    .checkbox-item{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .active-msg { color: var(--success); font-weight: bold; font-size: 0.85rem; margin-top: 10px; display: none; }
   </style>
 </head>
 <body>
@@ -81,157 +56,162 @@
     <div class="grid">
       <div class="card">
         <h3>My Rewards & Points</h3>
-        <p>Track your loyalty points and redeem them for free meals.</p>
+        <p>Redeem points for a direct discount. (Points or Coupons only)</p>
         <div class="points-display">
-          <div class="value">450</div>
+          <div class="value" id="pointsVal">0</div>
           <div class="label">Current Balance</div>
         </div>
-        <button class="btn btn-secondary" style="width:100%">Redeem Points</button>
-        <div class="muted" style="margin-top:8px">💡 Earn 1 point for every ₹10 spent</div>
+        <button class="btn btn-secondary" onclick="redeemPoints()">Redeem All Points</button>
+        <div id="pointsMsg" class="active-msg">Points applied as discount!</div>
       </div>
 
       <div class="card">
         <h3>Today's Offers & Coupons</h3>
-        <p>Click a coupon to copy it or enter a code below.</p>
+        <p>Tap a coupon to apply it instantly to your bill.</p>
         
         <div class="coupon" onclick="applyCoupon('SAVE10')">
           <div class="coupon-code">SAVE10</div>
-          <div class="coupon-desc">10% off for Special Members (Apply now)</div>
+          <div class="coupon-desc">10% off on your entire bill</div>
         </div>
         
-        <div class="coupon">
+        <div class="coupon" onclick="applyCoupon('VEG100')">
           <div class="coupon-code">VEG100</div>
-          <div class="coupon-desc">Flat ₹100 off on pure veg combos</div>
+          <div class="coupon-desc">Flat ₹100 off (Min. order ₹500)</div>
+        </div>
+
+        <div class="coupon" onclick="applyCoupon('FREEDESSERT')">
+          <div class="coupon-code">FREEDESSERT</div>
+          <div class="coupon-desc">Flat ₹50 off on Dessert total</div>
         </div>
 
         <div class="input-group">
-          <input type="text" id="promoCode" placeholder="Enter Promo Code" />
-          <button class="btn btn-apply">Apply</button>
+          <input type="text" id="promoCode" placeholder="Enter Code" />
+          <button class="btn btn-apply" onclick="manualCoupon()">Apply</button>
         </div>
+        <div id="couponMsg" class="active-msg">Coupon Applied!</div>
       </div>
 
       <div class="card">
-        <h3>My Order History</h3>
-        <p>Quickly reorder your favorite meals.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <h3>My Order Statistics</h3>
+        <p>Your dining habits at a glance.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div class="stat-box">
-            <div class="stat-value">12</div>
-            <div class="stat-label">Total Orders</div>
+            <div class="stat-value" id="totalOrders">0</div>
+            <div class="stat-label">Total Visits</div>
           </div>
           <div class="stat-box">
-            <div class="stat-value" style="font-size:0.8rem">Dal Makhani</div>
-            <div class="stat-label">Favorite</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-value">₹450</div>
-            <div class="stat-label">Saved</div>
+            <div class="stat-value" id="favDish" style="font-size:0.9rem">None</div>
+            <div class="stat-label">Most Ordered</div>
           </div>
         </div>
-        <div class="recent-order">
-          <div class="order-header">Order #O2024 — Yesterday</div>
-          <div class="order-items">Dal Makhani, Butter Naan, Lassi</div>
-          <button class="btn" style="width:100%;margin-top:8px">Reorder</button>
+        <div class="stat-box" style="margin-top:10px">
+          <div class="stat-value" id="totalSpent">₹0</div>
+          <div class="stat-label">Lifetime Spend</div>
         </div>
       </div>
 
       <div class="card">
         <h3>Dietary Preferences</h3>
-        <p>Set your food preferences for tailored menu suggestions.</p>
-        <div class="checkbox-list">
-          <div class="checkbox-item">
-            <input type="checkbox" id="veg" checked />
-            <label for="veg">Pure Veg</label>
-          </div>
-          <div class="checkbox-item">
-            <input type="checkbox" id="jain" />
-            <label for="jain">Jain Food (No Onion/Garlic)</label>
-          </div>
-          <div class="checkbox-item">
-            <input type="checkbox" id="glutenfree" />
-            <label for="glutenfree">Gluten-Free</label>
-          </div>
+        <p>Saved to your profile for future orders.</p>
+        <div class="checkbox-item">
+          <input type="checkbox" id="veg" checked />
+          <label for="veg">Always show Pure Veg</label>
         </div>
-      </div>
-
-      <div class="card">
-        <h3>Active Order Tracking</h3>
-        <div class="timeline">
-          <div class="timeline-item">
-            <div class="timeline-dot done"></div>
-            <div class="timeline-content">
-              <div class="timeline-label">Order Placed</div>
-              <div class="timeline-time">5:45 PM</div>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-dot done"></div>
-            <div class="timeline-content">
-              <div class="timeline-label">Preparing in Kitchen</div>
-              <div class="timeline-time">5:50 PM</div>
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="timeline-label">Ready to Serve</div>
-              <div class="timeline-time">Est. 6:10 PM</div>
-            </div>
-          </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="jain" />
+          <label for="jain">Jain Preference (No Onion/Garlic)</label>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Global function to apply coupon and go back
-    window.applyCoupon = function(code) {
-        if(code === 'SAVE10') {
-            localStorage.setItem('active_coupon', 'SAVE10');
-            alert('Coupon SAVE10 applied! Returning to your bill.');
-            window.location.href = 'billing.html';
-        } else {
-            alert('This coupon is currently unavailable.');
+    // 1. DYNAMIC FAVORITES & POINTS LOGIC
+    function loadUserStats() {
+      const history = JSON.parse(localStorage.getItem('rf_history') || '[]');
+      const dishCount = {};
+      let totalSpent = 0;
+
+      history.forEach(order => {
+        // Calculate spend
+        order.items.forEach(item => {
+          totalSpent += (item.price * item.qty);
+          // Count dish frequency
+          dishCount[item.name] = (dishCount[item.name] || 0) + item.qty;
+        });
+      });
+
+      // Find Favorite
+      let favorite = "None";
+      let max = 0;
+      for (const dish in dishCount) {
+        if (dishCount[dish] > max) {
+          max = dishCount[dish];
+          favorite = dish;
         }
+      }
+
+      // Update UI
+      document.getElementById('totalOrders').textContent = history.length;
+      document.getElementById('totalSpent').textContent = `₹${totalSpent}`;
+      document.getElementById('favDish').textContent = favorite;
+      
+      // Calculate Points (₹10 = 1 Point)
+      const points = Math.floor(totalSpent / 10);
+      document.getElementById('pointsVal').textContent = points;
+      localStorage.setItem('user_points', points);
+    }
+
+    // 2. COUPON & REDEMPTION LOGIC (Exclusive)
+    window.applyCoupon = function(code) {
+      localStorage.removeItem('use_points'); // Points disabled if coupon used
+      localStorage.setItem('active_coupon', code);
+      
+      document.getElementById('pointsMsg').style.display = 'none';
+      document.getElementById('couponMsg').style.display = 'block';
+      alert(`Coupon ${code} applied! Points redemption removed.`);
+      
+      if(localStorage.getItem('current_cart')) {
+          document.getElementById('returnToBill').style.display = 'block';
+      }
     };
 
+    window.redeemPoints = function() {
+      const points = parseInt(localStorage.getItem('user_points') || '0');
+      if(points <= 0) {
+        alert("No points available to redeem!");
+        return;
+      }
+      
+      localStorage.removeItem('active_coupon'); // Coupon disabled if points used
+      localStorage.setItem('use_points', 'true');
+      
+      document.getElementById('couponMsg').style.display = 'none';
+      document.getElementById('pointsMsg').style.display = 'block';
+      alert(`Redeeming ${points} points! Coupons removed.`);
+      
+      if(localStorage.getItem('current_cart')) {
+          document.getElementById('returnToBill').style.display = 'block';
+      }
+    };
+
+    function manualCoupon() {
+      const code = document.getElementById('promoCode').value.trim().toUpperCase();
+      if(code) applyCoupon(code);
+    }
+
+    // 3. INITIALIZE
     (function(){
-      // Logic to show "Return to Bill" button only if user has an active cart
+      loadUserStats();
+      
       const cart = localStorage.getItem('current_cart');
       if (cart && JSON.parse(cart).length > 0) {
           document.getElementById('returnToBill').style.display = 'block';
       }
 
-      // Promo code apply functionality
-      const promoInput = document.getElementById('promoCode');
-      const applyBtn = document.querySelector('.btn-apply');
-      
-      applyBtn.addEventListener('click', ()=>{
-        const code = promoInput.value.trim().toUpperCase();
-        if(code === 'SAVE10') {
-            applyCoupon(code);
-        } else {
-            alert('Invalid Promo Code');
-        }
-      });
-
-      // Dietary preference change handlers
-      const preferences = JSON.parse(localStorage.getItem('rf_preferences')||'{"veg":true,"jain":false,"glutenfree":false,"spicy":"medium"}');
-      
-      document.getElementById('veg').checked = preferences.veg;
-      document.getElementById('jain').checked = preferences.jain;
-      document.getElementById('glutenfree').checked = preferences.glutenfree;
-
-      [document.getElementById('veg'), document.getElementById('jain'), document.getElementById('glutenfree')].forEach(cb=>{
-        cb.addEventListener('change', (e)=>{
-          preferences[e.target.id] = e.target.checked;
-          localStorage.setItem('rf_preferences', JSON.stringify(preferences));
-        });
-      });
-
-      // Redeem points button
-      document.querySelector('.btn-secondary').addEventListener('click', ()=>{
-        alert('You have 450 points! You need 500 points to redeem a free starter.');
-      });
+      // Restore Visual States
+      if(localStorage.getItem('active_coupon')) document.getElementById('couponMsg').style.display = 'block';
+      if(localStorage.getItem('use_points')) document.getElementById('pointsMsg').style.display = 'block';
     })();
   </script>
 </body>
