@@ -204,7 +204,7 @@
 
         if (currentOrderCode) {
           try {
-            const res = await fetch(`/api/orders/${encodeURIComponent(currentOrderCode)}/bill`);
+            const res = await fetch(`/api/orders.php?action=bill&order_code=${encodeURIComponent(currentOrderCode)}`);
             const data = await res.json();
             if (res.ok && data.ok && Array.isArray(data.bill) && data.bill.length) {
               tableName = data.bill[0].table_name || fallbackTable;
@@ -326,10 +326,11 @@
         overlay.classList.add("show");
         try {
           const couponCode = localStorage.getItem("active_coupon") || null;
-          const res = await fetch(`/api/orders/${encodeURIComponent(currentOrderCode)}/pay`, {
+          const res = await fetch('/api/orders.php?action=pay', {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              order_code: currentOrderCode,
               payment_method: selectedPaymentMethod,
               coupon_code: couponCode
             })

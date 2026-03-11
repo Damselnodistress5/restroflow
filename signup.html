@@ -175,7 +175,7 @@
 
   <main>
     <div class="auth-container">
-      <form class="form-card" id="signupForm" method="POST" action="/api/signup">
+      <form class="form-card" id="signupForm" method="POST" action="/api/signup.php">
         <h2>Sign Up</h2>
 
         <div class="form-group">
@@ -235,7 +235,7 @@
         };
 
         try {
-          const res = await fetch("/api/signup", {
+          const res = await fetch("/api/signup.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
