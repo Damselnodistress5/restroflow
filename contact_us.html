@@ -201,7 +201,7 @@
       const contactForm = document.getElementById('contactForm');
       const formSuccess = document.getElementById('formSuccess');
 
-      contactForm.addEventListener('submit', (e)=>{
+      contactForm.addEventListener('submit', async (e)=>{
         e.preventDefault();
 
         const name = document.getElementById('name').value.trim();
@@ -215,32 +215,25 @@
           return;
         }
 
-        // Save message to localStorage
-        const messages = JSON.parse(localStorage.getItem('contact_messages')||'[]');
-        const contactMessage = {
-          id: 'MSG'+Date.now(),
-          name,
-          email,
-          phone: phone || 'N/A',
-          category,
-          message,
-          submitted: new Date().toLocaleString(),
-          status: 'pending'
-        };
-        
-        messages.push(contactMessage);
-        localStorage.setItem('contact_messages', JSON.stringify(messages));
+        try {
+          const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, phone, category, message })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.message || 'Unable to send message');
+          }
 
-        // Show success message
-        formSuccess.classList.add('show');
-        
-        // Reset form
-        contactForm.reset();
-
-        // Hide success message after 5 seconds
-        setTimeout(()=>{
-          formSuccess.classList.remove('show');
-        }, 5000);
+          formSuccess.classList.add('show');
+          contactForm.reset();
+          setTimeout(()=>{
+            formSuccess.classList.remove('show');
+          }, 5000);
+        } catch (err) {
+          alert(err.message || 'Unable to send message');
+        }
       });
     })();
   </script>

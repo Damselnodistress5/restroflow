@@ -175,7 +175,7 @@
 
   <main>
     <div class="auth-container">
-      <form class="form-card" method="POST" action="/api/login">
+      <form class="form-card" id="loginForm" method="POST" action="/api/login">
         <h2>Log In</h2>
 
         <div class="form-group">
@@ -189,6 +189,7 @@
         </div>
 
         <button type="submit" class="submit-btn">Log In</button>
+        <div id="loginMessage" class="form-footer" style="margin-top:12px;"></div>
 
         <div class="form-footer">
           Don't have an account? <a href="signup.html">Sign up here</a>
@@ -204,5 +205,44 @@
   <footer>
     <p>&copy; 2026 RestroFlow</p>
   </footer>
+
+  <script>
+    (function () {
+      const form = document.getElementById("loginForm");
+      const messageEl = document.getElementById("loginMessage");
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        messageEl.textContent = "";
+
+        const payload = {
+          email: document.getElementById("email").value.trim(),
+          password: document.getElementById("password").value
+        };
+
+        try {
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.message || "Login failed");
+          }
+
+          localStorage.setItem("current_user", JSON.stringify(data.user));
+          messageEl.style.color = "#067a3b";
+          messageEl.textContent = "Login successful. Redirecting...";
+          setTimeout(function () {
+            window.location.href = "home_page.html";
+          }, 900);
+        } catch (err) {
+          messageEl.style.color = "#b00020";
+          messageEl.textContent = err.message || "Login failed";
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -338,17 +338,47 @@
     }
 
     // 4. Send to Billing Page
-    function checkout() {
+    async function checkout() {
       if (cart.length === 0) return;
-      
-      // Save the cart array to local storage
-      localStorage.setItem('current_cart', JSON.stringify(cart));
-      
-      // Save the dietary notes to local storage
-      localStorage.setItem('current_order_notes', orderNotes.value);
-      
-      // Jump instantly to the bill
-      window.location.href = 'billing.html';
+
+      const currentTable = localStorage.getItem('current_table') || 'Takeaway';
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
+
+      const payload = {
+        user_id: currentUser && currentUser.user_id ? currentUser.user_id : null,
+        table_code: currentTable,
+        order_notes: orderNotes.value,
+        items: cart.map(item => ({
+          item_code: item.id,
+          item_name: item.name,
+          quantity: item.qty,
+          unit_price: item.price
+        }))
+      };
+
+      try {
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = 'Saving Order...';
+
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.message || 'Failed to create order');
+        }
+
+        localStorage.setItem('current_order_code', data.order_code);
+        localStorage.setItem('current_cart', JSON.stringify(cart));
+        localStorage.setItem('current_order_notes', orderNotes.value);
+        window.location.href = 'billing.html';
+      } catch (err) {
+        alert(err.message || 'Unable to proceed. Please try again.');
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = 'Confirm & View Bill';
+      }
     }
   </script>
 </body>
