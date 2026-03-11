@@ -133,57 +133,6 @@ CREATE TABLE contact_messages (
   submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- ----------------------------
--- Sample seed data
--- ----------------------------
-
-INSERT INTO users (full_name, email, phone, password_hash, role) VALUES
-('Aarav Sharma', 'aarav@example.com', '+919876500001', 'hashed_password_1', 'customer'),
-('Admin User', 'admin@restroflow.com', '+919876500999', 'hashed_password_admin', 'admin');
-
-INSERT INTO dining_tables (table_code, capacity, area, status) VALUES
-('Table 1', 4, 'indoor', 'available'),
-('Table 2', 2, 'indoor', 'occupied'),
-('Table 3', 6, 'patio', 'reserved'),
-('Table 4', 4, 'patio', 'cleaning');
-
-INSERT INTO menu_categories (category_name) VALUES
-('Starters'),
-('Main Course'),
-('Beverages'),
-('Desserts');
-
-INSERT INTO menu_items (category_id, item_code, item_name, price, is_veg, is_active) VALUES
-(1, 'samosa', 'Samosa (3 pcs)', 89.00, TRUE, TRUE),
-(1, 'paneer65', 'Paneer 65', 149.00, TRUE, TRUE),
-(2, 'paneerMakhani', 'Paneer Makhani', 249.00, TRUE, TRUE),
-(2, 'vegBiryani', 'Vegetable Dum Biryani', 219.00, TRUE, TRUE),
-(3, 'coldCoffee', 'Cold Coffee with Ice Cream', 109.00, TRUE, TRUE),
-(4, 'gulab', 'Gulab Jamun (2 pcs)', 59.00, TRUE, TRUE);
-
-INSERT INTO coupons (coupon_code, discount_percent, valid_from, valid_to, is_active) VALUES
-('SAVE10', 10.00, '2026-01-01', '2026-12-31', TRUE);
-
--- Sample order
-INSERT INTO orders (order_code, user_id, table_id, order_notes, status, completed_at)
-VALUES ('ORD1001', 1, 1, 'No onion, medium spicy', 'completed', NOW());
-
-INSERT INTO order_items (order_id, item_id, quantity, unit_price) VALUES
-(1, 1, 2, 89.00),
-(1, 3, 1, 249.00),
-(1, 5, 1, 109.00);
-
-INSERT INTO payments (order_id, subtotal, discount_amount, cgst_amount, sgst_amount, grand_total, payment_method, payment_status)
-VALUES (1, 536.00, 53.60, 12.06, 12.06, 506.52, 'upi', 'paid');
-
-INSERT INTO feedback (order_id, user_id, food_rating, service_rating, comments)
-VALUES (1, 1, 5, 4, 'Great food, quick service.');
-
-INSERT INTO support_queries (query_code, full_name, contact_number, order_code, issue_type, description, photo_filename, status)
-VALUES ('QRY1001', 'Aarav Sharma', '+919876500001', 'ORD1001', 'payment', 'UPI payment showed pending but amount was debited.', NULL, 'pending');
-
-INSERT INTO contact_messages (message_code, full_name, email, phone, category, message_text, status)
-VALUES ('MSG1001', 'Neha Verma', 'neha@example.com', '+919876500888', 'reservation', 'Need a table for 6 on Saturday evening.', 'pending');
 
 -- Useful report query: bill summary for all completed orders
 CREATE OR REPLACE VIEW v_order_bill_summary AS
