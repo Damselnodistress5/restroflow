@@ -89,46 +89,17 @@
       }
     };
 
-    async function submitFeedback() {
-      const foodRate = document.querySelector('input[name=\"foodRate\"]:checked');
-      const servRate = document.querySelector('input[name=\"servRate\"]:checked');
-      const comments = document.getElementById('comments').value.trim();
-      const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
-      const orderCode = localStorage.getItem('last_paid_order_code') || localStorage.getItem('current_order_code') || null;
-
-      if (!foodRate || !servRate) {
-        alert('Please rate both food and service.');
-        return;
-      }
-
-      try {
-        const res = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            order_code: orderCode,
-            user_id: currentUser && currentUser.user_id ? currentUser.user_id : null,
-            food_rating: Number(foodRate.value),
-            service_rating: Number(servRate.value),
-            comments
-          })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          throw new Error(data.message || 'Failed to submit feedback');
-        }
-
-        document.getElementById('feedbackFormCard').style.display = 'none';
-        document.getElementById('successCard').style.display = 'block';
-      } catch (err) {
-        alert(err.message || 'Failed to submit feedback');
-      }
+    function submitFeedback() {
+      // You could save the feedback to localStorage here if you wanted to build an admin dashboard later!
+      
+      // Hide the form, show the thank you screen
+      document.getElementById('feedbackFormCard').style.display = 'none';
+      document.getElementById('successCard').style.display = 'block';
     }
 
     function finishAndGoHome() {
       // Clear the table session so the next customer starts fresh
       localStorage.removeItem('current_table');
-      localStorage.removeItem('current_order_code');
       
       // Redirect back to the starting point
       window.location.href = 'home_page.html';

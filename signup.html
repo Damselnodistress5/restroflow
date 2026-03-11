@@ -175,7 +175,7 @@
 
   <main>
     <div class="auth-container">
-      <form class="form-card" id="signupForm" method="POST" action="/api/signup">
+      <form class="form-card" method="POST" action="/api/signup">
         <h2>Sign Up</h2>
 
         <div class="form-group">
@@ -204,7 +204,6 @@
         </div>
 
         <button type="submit" class="submit-btn">Sign Up</button>
-        <div id="signupMessage" class="form-footer" style="margin-top:12px;"></div>
 
         <div class="form-footer">
           Already have an account? <a href="login.html">Log in here</a>
@@ -216,47 +215,5 @@
   <footer>
     <p>&copy; 2026 RestroFlow</p>
   </footer>
-
-  <script>
-    (function () {
-      const form = document.getElementById("signupForm");
-      const messageEl = document.getElementById("signupMessage");
-
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        messageEl.textContent = "";
-
-        const payload = {
-          name: document.getElementById("name").value.trim(),
-          email: document.getElementById("email").value.trim(),
-          phone: document.getElementById("phone").value.trim(),
-          password: document.getElementById("password").value,
-          "confirm-password": document.getElementById("confirm-password").value
-        };
-
-        try {
-          const res = await fetch("/api/signup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
-            throw new Error(data.message || "Signup failed");
-          }
-
-          messageEl.style.color = "#067a3b";
-          messageEl.textContent = "Signup successful. Redirecting to login...";
-          form.reset();
-          setTimeout(function () {
-            window.location.href = "login.html";
-          }, 1200);
-        } catch (err) {
-          messageEl.style.color = "#b00020";
-          messageEl.textContent = err.message || "Signup failed";
-        }
-      });
-    })();
-  </script>
 </body>
 </html>

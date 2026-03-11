@@ -227,7 +227,7 @@
       const queryForm = document.getElementById('queryForm');
       const successMessage = document.getElementById('successMessage');
 
-      queryForm.addEventListener('submit', async (e)=>{
+      queryForm.addEventListener('submit', (e)=>{
         e.preventDefault();
 
         const fullName = document.getElementById('fullName').value.trim();
@@ -243,33 +243,34 @@
           return;
         }
 
-        try {
-          const res = await fetch('/api/query', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fullName,
-              contactNumber,
-              orderId,
-              issueType,
-              description,
-              photo_filename: photoFile ? photoFile.name : null
-            })
-          });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
-            throw new Error(data.message || 'Unable to submit query');
-          }
+        // Save query to localStorage
+        const queries = JSON.parse(localStorage.getItem('query_submissions')||'[]');
+        const querySubmission = {
+          id: 'QRY'+Date.now(),
+          fullName,
+          contactNumber,
+          orderId: orderId || 'N/A',
+          issueType,
+          description,
+          photoFileName: photoFile ? photoFile.name : 'N/A',
+          submitted: new Date().toLocaleString(),
+          status: 'pending'
+        };
 
-          successMessage.classList.add('show');
-          queryForm.reset();
-          document.getElementById('photoUpload').value = '';
-          setTimeout(()=>{
-            successMessage.classList.remove('show');
-          }, 6000);
-        } catch (err) {
-          alert(err.message || 'Unable to submit query');
-        }
+        queries.push(querySubmission);
+        localStorage.setItem('query_submissions', JSON.stringify(queries));
+
+        // Show success message
+        successMessage.classList.add('show');
+
+        // Reset form
+        queryForm.reset();
+        document.getElementById('photoUpload').value = '';
+
+        // Hide success message after 6 seconds
+        setTimeout(()=>{
+          successMessage.classList.remove('show');
+        }, 6000);
       });
     })();
   </script>
