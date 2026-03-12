@@ -227,7 +227,7 @@
       const queryForm = document.getElementById('queryForm');
       const successMessage = document.getElementById('successMessage');
 
-      queryForm.addEventListener('submit', async (e)=>{
+      queryForm.addEventListener('submit', (e)=>{
         e.preventDefault();
 
         const fullName = document.getElementById('fullName').value.trim();
@@ -242,22 +242,21 @@
           alert('Please fill in all required fields');
           return;
         }
-
-        try {
-          const res = await fetch('/api/query.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fullName,
-              contactNumber,
-              orderId,
-              issueType,
-              description,
-              photo_filename: photoFile ? photoFile.name : null
-            })
-          });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
+        fetch('/api/query.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName,
+            contactNumber,
+            orderId,
+            issueType,
+            description,
+            photo_filename: photoFile ? photoFile.name : null
+          })
+        })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok || !data.ok) {
             throw new Error(data.message || 'Unable to submit query');
           }
 
@@ -267,11 +266,14 @@
           setTimeout(()=>{
             successMessage.classList.remove('show');
           }, 6000);
-        } catch (err) {
+        })
+        .catch((err) => {
           alert(err.message || 'Unable to submit query');
-        }
+        });
       });
     })();
   </script>
 </body>
 </html>
+
+
