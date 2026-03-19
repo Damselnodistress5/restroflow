@@ -1,0 +1,776 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestroFlow Admin - Menu Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 250px;
+            background-color: #2e2e2e;
+            color: #fff;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 2px solid #826cd7;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            color: #826cd7;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 15px 20px;
+            color: #ccc;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(130, 108, 215, 0.2);
+            border-left-color: #826cd7;
+            color: #826cd7;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #826cd7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background-color: #6d51bb;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .sync-btn {
+            padding: 10px 20px;
+            background-color: #826cd7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .sync-btn:hover {
+            background-color: #6d51bb;
+        }
+
+        .table-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+
+        .table-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #f5f5f5;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #fafafa;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #826cd7;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-in-stock {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-sold-out {
+            background-color: #ffcccc;
+            color: #c62828;
+        }
+
+        /* Price Edit Modal */
+        .price-input {
+            width: 80px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .edit-price-btn {
+            padding: 6px 12px;
+            background-color: #826cd7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-right: 5px;
+        }
+
+        .edit-price-btn:hover {
+            background-color: #6d51bb;
+        }
+
+        .save-price-btn {
+            padding: 6px 12px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .save-price-btn:hover {
+            background-color: #45a049;
+        }
+
+        .cancel-price-btn {
+            padding: 6px 12px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .cancel-price-btn:hover {
+            background-color: #da190b;
+        }
+
+        /* Admin form styles */
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #826cd7;
+            box-shadow: 0 0 0 3px rgba(130, 108, 215, 0.12);
+        }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background-color: #e53935;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .delete-btn:hover {
+            background-color: #c62828;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Security Guard: Check if user is logged in
+        if (!sessionStorage.getItem('isAdminLoggedIn')) {
+            window.location.href = 'admin_login.html';
+        }
+
+        // Full menu template (matches order.html)
+        const MENU_TEMPLATE = [
+            {
+                category: "Starters",
+                items: [
+                    { id: 'samosa', name: 'Samosa (3 pcs)', price: 89 },
+                    { id: 'pakora', name: 'Pakora Mix', price: 99 },
+                    { id: 'springroll', name: 'Veg Spring Roll', price: 109 },
+                    { id: 'onionBhaji', name: 'Onion Bhaji', price: 79 },
+                    { id: 'veggieKebab', name: 'Veg Seekh Kebab', price: 119 },
+                    { id: 'haraBhara', name: 'Hara Bhara Kebab', price: 129 },
+                    { id: 'crispyCorn', name: 'Crispy Salt & Pepper Corn', price: 119 },
+                    { id: 'honeyChilliPotato', name: 'Honey Chilli Potato', price: 139 },
+                    { id: 'paneer65', name: 'Paneer 65', price: 149 },
+                    { id: 'tomatoSoup', name: 'Tomato Soup', price: 79 },
+                    { id: 'mushroomSoup', name: 'Mushroom Soup', price: 89 }
+                ]
+            },
+            {
+                category: "Main Course",
+                items: [
+                    { id: 'dal', name: 'Yellow Dal Tadka', price: 139 },
+                    { id: 'dalMakhani', name: 'Dal Makhani', price: 169 },
+                    { id: 'paneerTikka', name: 'Paneer Tikka Dry', price: 189 },
+                    { id: 'vegBiryani', name: 'Vegetable Dum Biryani', price: 219 },
+                    { id: 'vegPulao', name: 'Veg Pulao', price: 199 },
+                    { id: 'chanaKulcha', name: 'Chana Kulcha', price: 129 },
+                    { id: 'vegRistto', name: 'Mushroom Risotto', price: 229 }
+                ]
+            },
+            {
+                category: "North Indian",
+                items: [
+                    { id: 'paneerMakhani', name: 'Paneer Makhani', price: 249 },
+                    { id: 'kadaiPaneer', name: 'Kadai Paneer', price: 229 },
+                    { id: 'palakPaneer', name: 'Palak Paneer', price: 219 },
+                    { id: 'malaiKofta', name: 'Malai Kofta', price: 199 },
+                    { id: 'choleMasala', name: 'Punjabi Chole Masala', price: 159 },
+                    { id: 'tandooriPaneer', name: 'Tandoori Paneer Masala', price: 289 },
+                    { id: 'mixVeg', name: 'Mix Veg Curry', price: 179 },
+                    { id: 'vegNihari', name: 'Veg Nihari', price: 199 },
+                    { id: 'vegRogan', name: 'Veg Rogan Josh', price: 219 },
+                    { id: 'korma', name: 'Navratan Korma', price: 179 },
+                    { id: 'aloo', name: 'Aloo Gobi Adraki', price: 149 }
+                ]
+            },
+            {
+                category: "South Indian",
+                items: [
+                    { id: 'dosa', name: 'Masala Dosa', price: 129 },
+                    { id: 'paneerDosa', name: 'Paneer Masala Dosa', price: 159 },
+                    { id: 'ravaDosa', name: 'Onion Rava Dosa', price: 139 },
+                    { id: 'idli', name: 'Steamed Idli (4 pcs)', price: 79 },
+                    { id: 'meduVada', name: 'Medu Vada (2 pcs)', price: 89 },
+                    { id: 'sambar', name: 'Sambar & Rice', price: 109 },
+                    { id: 'uttapam', name: 'Mix Veg Uttapam', price: 119 },
+                    { id: 'lemonRice', name: 'Lemon Rice', price: 119 },
+                    { id: 'curdRice', name: 'Curd Rice', price: 99 },
+                    { id: 'rasam', name: 'Rasam Rice', price: 89 },
+                    { id: 'vegthali', name: 'South Indian Thali', price: 189 }
+                ]
+            },
+            {
+                category: "Chinese",
+                items: [
+                    { id: 'sweetCornSoup', name: 'Veg Sweet Corn Soup', price: 99 },
+                    { id: 'friedRice', name: 'Veg Fried Rice', price: 119 },
+                    { id: 'schezwanRice', name: 'Schezwan Fried Rice', price: 139 },
+                    { id: 'vegFriedRice', name: 'Paneer Fried Rice', price: 149 },
+                    { id: 'hakkaNoodles', name: 'Veg Hakka Noodles', price: 129 },
+                    { id: 'noodles', name: 'Chilli Garlic Noodles', price: 139 },
+                    { id: 'vegManchurianGravy', name: 'Veg Manchurian (Gravy)', price: 149 },
+                    { id: 'chilliPaneerGravy', name: 'Chilli Paneer (Gravy)', price: 169 },
+                    { id: 'vegFriedMomos', name: 'Veg Fried Momos', price: 139 },
+                    { id: 'vegSteamMomos', name: 'Veg Steamed Momos', price: 119 },
+                    { id: 'mushNoodles', name: 'Mushroom Chow Mein', price: 129 }
+                ]
+            },
+            {
+                category: "Italian",
+                items: [
+                    { id: 'margherita', name: 'Margherita Pizza', price: 249 },
+                    { id: 'veggiePizza', name: 'Farmhouse Veggie Pizza', price: 279 },
+                    { id: 'veggieSupreme', name: 'Veggie Supreme Pizza', price: 309 },
+                    { id: 'pasta', name: 'Pasta Arrabbiata (Red Sauce)', price: 189 },
+                    { id: 'alfredo', name: 'Pasta Alfredo (White Sauce)', price: 199 },
+                    { id: 'ragu', name: 'Pasta Pesto (Veg)', price: 179 }
+                ]
+            },
+            {
+                category: "Continental",
+                items: [
+                    { id: 'veggieSteak', name: 'Veggie Soya Steak', price: 199 },
+                    { id: 'grilledPaneer', name: 'Grilled Paneer Platter', price: 239 },
+                    { id: 'mushroomSteak', name: 'Mushroom Steak', price: 229 },
+                    { id: 'veggieGrill', name: 'Mixed Veg Grill', price: 219 },
+                    { id: 'veggieGoujon', name: 'Paneer Goujon', price: 189 }
+                ]
+            },
+            {
+                category: "Beverages",
+                items: [
+                    { id: 'coke', name: 'Coca Cola', price: 49 },
+                    { id: 'sprite', name: 'Sprite', price: 49 },
+                    { id: 'orangeJuice', name: 'Fresh Orange Juice', price: 69 },
+                    { id: 'mango', name: 'Mango Lassi', price: 59 },
+                    { id: 'sweetLassi', name: 'Sweet Lassi', price: 49 },
+                    { id: 'chai', name: 'Masala Chai', price: 39 },
+                    { id: 'coffee', name: 'Hot Coffee', price: 79 },
+                    { id: 'coldCoffee', name: 'Cold Coffee with Ice Cream', price: 109 },
+                    { id: 'iceTeaLemon', name: 'Iced Lemon Tea', price: 49 },
+                    { id: 'strawberryMilk', name: 'Strawberry Shake', price: 69 },
+                    { id: 'chocolateMilk', name: 'Chocolate Shake', price: 69 },
+                    { id: 'lemonWater', name: 'Fresh Lime Soda', price: 49 },
+                    { id: 'watermelon', name: 'Watermelon Juice', price: 59 }
+                ]
+            },
+            {
+                category: "Desserts",
+                items: [
+                    { id: 'vanillaIce', name: 'Vanilla Ice Cream', price: 79 },
+                    { id: 'chocolateIce', name: 'Chocolate Ice Cream', price: 79 },
+                    { id: 'kulfi', name: 'Malai Kulfi', price: 69 },
+                    { id: 'gulab', name: 'Gulab Jamun (2 pcs)', price: 59 },
+                    { id: 'rasgulla', name: 'Rasgulla (2 pcs)', price: 49 },
+                    { id: 'kheer', name: 'Rice Kheer', price: 59 },
+                    { id: 'halwa', name: 'Gajar Ka Halwa', price: 79 },
+                    { id: 'jalebi', name: 'Hot Jalebi', price: 49 },
+                    { id: 'brownie', name: 'Sizzling Brownie', price: 129 }
+                ]
+            }
+        ];
+
+        const DEFAULT_MENU = MENU_TEMPLATE.flatMap(section =>
+            section.items.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                category: section.category,
+                isAvailable: true
+            }))
+        );
+
+        async function resetToDefaults() {
+            try {
+                const res = await fetch('/api/admin/menu_item.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'reset_defaults', items: DEFAULT_MENU })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to restore defaults');
+                }
+                await loadMenuData();
+            } catch (err) {
+                alert(err.message || 'Failed to restore defaults');
+            }
+        }
+    </script>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>RestroFlow</h2>
+            <p>Admin Suite</p>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="admin_sales.html">Sales Dashboard</a></li>
+            <li><a href="admin_feedback.html">Customer Feedback</a></li>
+            <li><a href="admin_queries.html">Support Tickets</a></li>
+            <li><a href="admin_menu.html" class="active">Menu Settings</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()">Secure Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Menu Management</h1>
+            <div>
+                <button class="sync-btn" onclick="syncData()">Sync Live Data</button>
+                <button class="sync-btn" onclick="resetToDefaults()">Restore Defaults</button>
+            </div>
+        </div>
+
+        <!-- Menu Table -->
+        <div class="table-section">
+            <h2>Menu Items</h2>
+
+            <div class="form-row" style="margin-bottom: 24px;">
+                <div class="form-group">
+                    <label for="newName">Item Name</label>
+                    <input id="newName" placeholder="e.g. Chole Bhature" />
+                </div>
+                <div class="form-group">
+                    <label for="newCategory">Category</label>
+                    <input id="newCategory" placeholder="e.g. North Indian" />
+                </div>
+                <div class="form-group">
+                    <label for="newPrice">Price</label>
+                    <input id="newPrice" type="number" min="0" step="0.01" placeholder="e.g. 199" />
+                </div>
+                <div class="form-group" style="align-items:flex-end;">
+                    <button class="sync-btn" style="width: 100%;" onclick="addMenuItem()">+ Add Item</button>
+                </div>
+            </div>
+
+            <table id="menuTable">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Availability</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="4" class="empty-message">No menu items available. Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        async function toggleAvailability(itemId, currentState) {
+            try {
+                const res = await fetch('/api/admin/menu_item.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'toggle', item_id: itemId, is_active: !currentState })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to update availability');
+                }
+                await loadMenuData();
+            } catch (err) {
+                alert(err.message || 'Failed to update availability');
+            }
+        }
+
+        async function editPrice(itemId) {
+            const row = document.querySelector(`[data-item-id="${itemId}"]`);
+            if (!row) return;
+            const priceCell = row.querySelector('.price-cell');
+            const currentPrice = priceCell.getAttribute('data-price') || '0.00';
+
+            priceCell.innerHTML = `
+                <input type="number" class="price-input" id="priceInput${itemId}" value="${currentPrice}" step="0.01" min="0">
+                <button class="save-price-btn" onclick="savePrice(${itemId})">Save</button>
+                <button class="cancel-price-btn" onclick="loadMenuData()">Cancel</button>
+            `;
+
+            document.getElementById(`priceInput${itemId}`).focus();
+        }
+
+        async function savePrice(itemId) {
+            const input = document.getElementById(`priceInput${itemId}`);
+            if (!input) return;
+            const newPrice = parseFloat(input.value) || 0;
+
+            try {
+                const res = await fetch('/api/admin/menu_item.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update_price', item_id: itemId, price: newPrice })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to update price');
+                }
+                await loadMenuData();
+            } catch (err) {
+                alert(err.message || 'Failed to update price');
+            }
+        }
+
+        async function deleteItem(itemId) {
+            try {
+                const res = await fetch('/api/admin/menu_item.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', item_id: itemId })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to remove item');
+                }
+                await loadMenuData();
+            } catch (err) {
+                alert(err.message || 'Failed to remove item');
+            }
+        }
+
+        async function addMenuItem() {
+            const name = document.getElementById('newName').value.trim();
+            const category = document.getElementById('newCategory').value.trim();
+            const price = parseFloat(document.getElementById('newPrice').value);
+
+            if (!name || !category || isNaN(price)) {
+                alert('Please enter a valid name, category, and price.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/menu_item.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add', name, category, price })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to add item');
+                }
+
+                document.getElementById('newName').value = '';
+                document.getElementById('newCategory').value = '';
+                document.getElementById('newPrice').value = '';
+                await loadMenuData();
+            } catch (err) {
+                alert(err.message || 'Failed to add item');
+            }
+        }
+
+        async function loadMenuData() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '<tr><td colspan="4" class="empty-message">Loading menu data...</td></tr>';
+
+            try {
+                const res = await fetch('/api/admin/menu.php');
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to load menu');
+                }
+
+                const menuItems = data.menu || [];
+                tableBody.innerHTML = '';
+
+                if (menuItems.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="empty-message">No menu items available yet.</td></tr>';
+                    return;
+                }
+
+                menuItems.forEach((item) => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-item-id', item.item_id);
+
+                    const isAvailable = item.isAvailable !== false;
+                    const statusBadge = isAvailable
+                        ? '<span class="status-badge status-in-stock">In Stock</span>'
+                        : '<span class="status-badge status-sold-out">Sold Out</span>';
+
+                    const priceValue = parseFloat(item.price || 0).toFixed(2);
+                    row.innerHTML = `
+                        <td><strong>${item.name || 'N/A'}</strong></td>
+                        <td>${item.category || 'Uncategorized'}</td>
+                        <td>
+                            <div class="price-cell" data-price="${priceValue}">
+                                $${priceValue}
+                                <button class="edit-price-btn" onclick="editPrice(${item.item_id})">Edit</button>
+                                <button class="delete-btn" onclick="deleteItem(${item.item_id})">Remove</button>
+                            </div>
+                        </td>
+                        <td>
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${isAvailable ? 'checked' : ''} onchange="toggleAvailability(${item.item_id}, ${isAvailable})">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="toggle-label">${statusBadge}</span>
+                        </td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+            } catch (err) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="empty-message">Unable to load menu data.</td></tr>';
+            }
+        }
+
+        async function syncData() {
+            await loadMenuData();
+            const syncBtn = event.target;
+            syncBtn.textContent = 'Synced';
+            setTimeout(() => {
+                syncBtn.textContent = 'Sync Live Data';
+            }, 1500);
+        }
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'home_page.html';
+        }
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', loadMenuData);
+    </script>
+</body>
+</html>
+
+

@@ -229,6 +229,145 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True, "bill": rows})
             return
 
+        if path == "/api/admin/sales.php":
+            conn = db_conn()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT o.order_code, o.created_at, COALESCE(t.table_code, 'Takeaway') AS table_name,
+                       p.grand_total, p.payment_method,
+                       u.full_name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+                FROM payments p
+                JOIN orders o ON o.order_id = p.order_id
+                LEFT JOIN dining_tables t ON t.table_id = o.table_id
+                LEFT JOIN users u ON u.user_id = o.user_id
+                ORDER BY p.paid_at DESC, p.payment_id DESC
+                """
+            )
+            rows = [
+                {
+                    "order_id": r["order_code"],
+                    "date": r["created_at"],
+                    "table_name": r["table_name"],
+                    "grand_total": float(r["grand_total"] or 0),
+                    "payment_method": r["payment_method"],
+                    "customer_name": r["customer_name"] or "",
+                    "customer_email": r["customer_email"] or "",
+                    "customer_phone": r["customer_phone"] or "",
+                }
+                for r in cur.fetchall()
+            ]
+            conn.close()
+            self._json(200, {"ok": True, "orders": rows})
+            return
+
+        if path == "/api/admin/feedback.php":
+            conn = db_conn()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT f.feedback_id, f.food_rating, f.service_rating, f.comments, f.submitted_at,
+                       COALESCE(t.table_code, 'Takeaway') AS table_name,
+                       u.full_name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+                FROM feedback f
+                LEFT JOIN orders o ON o.order_id = f.order_id
+                LEFT JOIN dining_tables t ON t.table_id = o.table_id
+                LEFT JOIN users u ON u.user_id = COALESCE(f.user_id, o.user_id)
+                ORDER BY f.submitted_at DESC, f.feedback_id DESC
+                """
+            )
+            rows = []
+            for r in cur.fetchall():
+                food = int(r["food_rating"] or 0)
+                service = int(r["service_rating"] or 0)
+                avg = round((food + service) / 2) if (food or service) else 0
+                rows.append(
+                    {
+                        "feedback_id": r["feedback_id"],
+                        "table_name": r["table_name"],
+                        "food_rating": food,
+                        "service_rating": service,
+                        "star_rating": avg,
+                        "comment": r["comments"] or "",
+                        "date": r["submitted_at"],
+                        "customer_name": r["customer_name"] or "",
+                        "customer_email": r["customer_email"] or "",
+                        "customer_phone": r["customer_phone"] or "",
+                    }
+                )
+            conn.close()
+            self._json(200, {"ok": True, "feedback": rows})
+            return
+
+        if path == "/api/admin/queries.php":
+            status = (qs.get("status", ["pending"])[0] or "pending").strip().lower()
+            conn = db_conn()
+            cur = conn.cursor()
+            if status == "all":
+                cur.execute(
+                    """
+                    SELECT query_id, query_code, order_code, issue_type, description, status, submitted_at,
+                           full_name, contact_number
+                    FROM support_queries
+                    ORDER BY submitted_at DESC, query_id DESC
+                    """
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT query_id, query_code, order_code, issue_type, description, status, submitted_at,
+                           full_name, contact_number
+                    FROM support_queries
+                    WHERE status = ?
+                    ORDER BY submitted_at DESC, query_id DESC
+                    """,
+                    (status,),
+                )
+            rows = [
+                {
+                    "query_id": r["query_id"],
+                    "query_code": r["query_code"],
+                    "order_code": r["order_code"] or "",
+                    "issue_type": r["issue_type"],
+                    "description": r["description"],
+                    "status": r["status"],
+                    "date": r["submitted_at"],
+                    "full_name": r["full_name"] or "",
+                    "contact_number": r["contact_number"] or "",
+                }
+                for r in cur.fetchall()
+            ]
+            conn.close()
+            self._json(200, {"ok": True, "queries": rows})
+            return
+
+        if path == "/api/admin/menu.php":
+            conn = db_conn()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT mi.item_id, mi.item_code, mi.item_name, mi.price, mi.is_active,
+                       COALESCE(mc.category_name, 'Uncategorized') AS category_name
+                FROM menu_items mi
+                LEFT JOIN menu_categories mc ON mc.category_id = mi.category_id
+                ORDER BY mi.item_id DESC
+                """
+            )
+            rows = [
+                {
+                    "item_id": r["item_id"],
+                    "id": r["item_code"],
+                    "name": r["item_name"],
+                    "price": float(r["price"] or 0),
+                    "category": r["category_name"],
+                    "isAvailable": bool(r["is_active"]),
+                }
+                for r in cur.fetchall()
+            ]
+            conn.close()
+            self._json(200, {"ok": True, "menu": rows})
+            return
+
         target = (BASE_DIR / path.lstrip("/")).resolve()
         if not str(target).startswith(str(BASE_DIR)):
             self.send_error(403, "Forbidden")
@@ -535,6 +674,122 @@ class Handler(BaseHTTPRequestHandler):
             self._json(201, {"ok": True, "query_id": rowid, "query_code": qid})
             return
 
+        if path == "/api/admin/query_resolve.php":
+            query_id = body.get("query_id")
+            query_code = (body.get("query_code") or "").strip()
+            if not query_id and not query_code:
+                self._json(400, {"ok": False, "message": "query_id or query_code is required"})
+                return
+            conn = db_conn()
+            cur = conn.cursor()
+            if query_id:
+                cur.execute("UPDATE support_queries SET status='resolved' WHERE query_id = ?", (query_id,))
+            else:
+                cur.execute("UPDATE support_queries SET status='resolved' WHERE query_code = ?", (query_code,))
+            affected = cur.rowcount
+            conn.commit()
+            conn.close()
+            if affected == 0:
+                self._json(404, {"ok": False, "message": "Ticket not found"})
+            else:
+                self._json(200, {"ok": True, "message": "Ticket marked as resolved"})
+            return
+
+        if path == "/api/admin/menu_item.php":
+            action = (body.get("action") or "").strip().lower()
+            conn = db_conn()
+            cur = conn.cursor()
+            try:
+                if action == "add":
+                    name = (body.get("name") or "").strip()
+                    category = (body.get("category") or "").strip() or "Uncategorized"
+                    price = float(body.get("price") or 0)
+                    if not name:
+                        self._json(400, {"ok": False, "message": "name is required"})
+                        return
+
+                    cur.execute("INSERT OR IGNORE INTO menu_categories (category_name) VALUES (?)", (category,))
+                    cur.execute("SELECT category_id FROM menu_categories WHERE category_name = ? LIMIT 1", (category,))
+                    cat = cur.fetchone()
+                    category_id = cat["category_id"] if cat else 1
+                    item_code = (name.lower().replace(" ", "_"))[:32] + f"_{int(time.time())}"
+
+                    cur.execute(
+                        "INSERT INTO menu_items (category_id, item_code, item_name, price, is_veg, is_active) VALUES (?, ?, ?, ?, 1, 1)",
+                        (category_id, item_code, name, price),
+                    )
+                    conn.commit()
+                    self._json(201, {"ok": True, "item_id": cur.lastrowid})
+                    return
+
+                if action == "update_price":
+                    item_id = body.get("item_id")
+                    price = float(body.get("price") or 0)
+                    if not item_id:
+                        self._json(400, {"ok": False, "message": "item_id is required"})
+                        return
+                    cur.execute("UPDATE menu_items SET price = ? WHERE item_id = ?", (price, item_id))
+                    conn.commit()
+                    self._json(200, {"ok": True})
+                    return
+
+                if action == "toggle":
+                    item_id = body.get("item_id")
+                    is_active = 1 if body.get("is_active") else 0
+                    if not item_id:
+                        self._json(400, {"ok": False, "message": "item_id is required"})
+                        return
+                    cur.execute("UPDATE menu_items SET is_active = ? WHERE item_id = ?", (is_active, item_id))
+                    conn.commit()
+                    self._json(200, {"ok": True})
+                    return
+
+                if action == "delete":
+                    item_id = body.get("item_id")
+                    if not item_id:
+                        self._json(400, {"ok": False, "message": "item_id is required"})
+                        return
+                    cur.execute("DELETE FROM menu_items WHERE item_id = ?", (item_id,))
+                    conn.commit()
+                    self._json(200, {"ok": True})
+                    return
+
+                if action == "reset_defaults":
+                    items = body.get("items") or []
+                    if not isinstance(items, list) or not items:
+                        self._json(400, {"ok": False, "message": "items array is required"})
+                        return
+
+                    cur.execute("DELETE FROM menu_items")
+                    cur.execute("DELETE FROM menu_categories")
+                    cur.execute("INSERT OR IGNORE INTO menu_categories (category_name) VALUES ('Uncategorized')")
+
+                    for i, item in enumerate(items):
+                        name = (item.get("name") or "").strip()
+                        category = (item.get("category") or "").strip() or "Uncategorized"
+                        price = float(item.get("price") or 0)
+                        is_active = 1 if item.get("isAvailable", True) else 0
+                        if not name:
+                            continue
+                        cur.execute("INSERT OR IGNORE INTO menu_categories (category_name) VALUES (?)", (category,))
+                        cur.execute("SELECT category_id FROM menu_categories WHERE category_name = ? LIMIT 1", (category,))
+                        cat = cur.fetchone()
+                        category_id = cat["category_id"] if cat else 1
+                        item_code = (name.lower().replace(" ", "_"))[:32] + f"_{int(time.time())}_{i}"
+                        cur.execute(
+                            "INSERT INTO menu_items (category_id, item_code, item_name, price, is_veg, is_active) VALUES (?, ?, ?, ?, 1, ?)",
+                            (category_id, item_code, name, price, is_active),
+                        )
+
+                    conn.commit()
+                    self._json(200, {"ok": True})
+                    return
+
+                self._json(400, {"ok": False, "message": "Unknown action"})
+            finally:
+                conn.close()
+            return
+
         self._json(404, {"ok": False, "message": "Route not found"})
 
 
@@ -545,4 +800,3 @@ if __name__ == "__main__":
     server = ThreadingHTTPServer((host, port), Handler)
     print(f"RestroFlow Python server running at http://{host}:{port}")
     server.serve_forever()
-

@@ -1,0 +1,347 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestroFlow Admin - Support Tickets</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 250px;
+            background-color: #2e2e2e;
+            color: #fff;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 2px solid #826cd7;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            color: #826cd7;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 15px 20px;
+            color: #ccc;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(130, 108, 215, 0.2);
+            border-left-color: #826cd7;
+            color: #826cd7;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #826cd7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background-color: #6d51bb;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .sync-btn {
+            padding: 10px 20px;
+            background-color: #826cd7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .sync-btn:hover {
+            background-color: #6d51bb;
+        }
+
+        /* Tickets List */
+        .tickets-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ticket {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #826cd7;
+            transition: all 0.3s;
+        }
+
+        .ticket:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .ticket-id {
+            font-weight: 700;
+            color: #826cd7;
+            font-size: 15px;
+        }
+
+        .ticket-table {
+            background-color: #f5f5f5;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .ticket-subject {
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        .ticket-message {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .ticket-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 12px;
+        }
+
+        .ticket-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .resolve-btn {
+            padding: 8px 16px;
+            background-color: #826cd7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .resolve-btn:hover {
+            background-color: #6d51bb;
+        }
+
+        .resolve-btn:active {
+            transform: scale(0.98);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Security Guard: Check if user is logged in
+        if (!sessionStorage.getItem('isAdminLoggedIn')) {
+            window.location.href = 'admin_login.html';
+        }
+    </script>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>RestroFlow</h2>
+            <p>Admin Suite</p>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="admin_sales.html">Sales Dashboard</a></li>
+            <li><a href="admin_feedback.html">Customer Feedback</a></li>
+            <li><a href="admin_queries.html" class="active">Support Tickets</a></li>
+            <li><a href="admin_menu.html">Menu Settings</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()">Secure Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Support Tickets</h1>
+            <button class="sync-btn" onclick="syncData()">Sync Live Data</button>
+        </div>
+
+        <!-- Tickets List -->
+        <div class="tickets-container" id="ticketsContainer">
+            <div class="empty-message">Loading tickets...</div>
+        </div>
+    </main>
+
+    <script>
+        async function resolveTicket(queryId) {
+            try {
+                const res = await fetch('/api/admin/query_resolve.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query_id: queryId })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to resolve ticket');
+                }
+                await loadQueriesData();
+            } catch (err) {
+                alert(err.message || 'Failed to resolve ticket');
+            }
+        }
+
+        async function loadQueriesData() {
+            const ticketsContainer = document.getElementById('ticketsContainer');
+            ticketsContainer.innerHTML = '<div class="empty-message">Loading tickets...</div>';
+
+            try {
+                const res = await fetch('/api/admin/queries.php?status=pending');
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.message || 'Failed to load tickets');
+                }
+
+                const queries = data.queries || [];
+                ticketsContainer.innerHTML = '';
+
+                if (queries.length === 0) {
+                    ticketsContainer.innerHTML = '<div class="empty-message">No support tickets at this time.</div>';
+                    return;
+                }
+
+                queries.forEach((query) => {
+                    const ticket = document.createElement('div');
+                    ticket.className = 'ticket';
+                    ticket.innerHTML = `
+                        <div class="ticket-header">
+                            <span class="ticket-id">Ticket #${query.query_code || query.query_id}</span>
+                            <span class="ticket-table">Order: ${query.order_code || 'N/A'}</span>
+                        </div>
+                        <div class="ticket-message"><strong>Customer:</strong> ${query.full_name || 'N/A'} | <strong>Contact:</strong> ${query.contact_number || 'N/A'}</div>
+                        <div class="ticket-subject">${query.issue_type || 'No Subject'}</div>
+                        <div class="ticket-message">${query.description || 'No message provided'}</div>
+                        <div class="ticket-footer">
+                            <span class="ticket-date">${query.date || 'Date not recorded'}</span>
+                            <button class="resolve-btn" onclick="resolveTicket(${query.query_id})">Mark Resolved</button>
+                        </div>
+                    `;
+                    ticketsContainer.appendChild(ticket);
+                });
+            } catch (err) {
+                ticketsContainer.innerHTML = '<div class="empty-message">Unable to load support tickets.</div>';
+            }
+        }
+
+        async function syncData() {
+            await loadQueriesData();
+            const syncBtn = event.target;
+            syncBtn.textContent = 'Synced';
+            setTimeout(() => {
+                syncBtn.textContent = 'Sync Live Data';
+            }, 1500);
+        }
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'home_page.html';
+        }
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', loadQueriesData);
+    </script>
+</body>
+</html>
+
+

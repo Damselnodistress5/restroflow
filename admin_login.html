@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestroFlow Admin - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #826cd7 0%, #5a4a7d 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #826cd7;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #826cd7;
+            box-shadow: 0 0 0 3px rgba(130, 108, 215, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #826cd7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background-color: #6d51bb;
+        }
+
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .credentials-info {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            border-left: 4px solid #826cd7;
+        }
+
+        .credentials-info strong {
+            display: block;
+            color: #333;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>RestroFlow</h1>
+            <p>Administrative Suite</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="staffId">Staff ID</label>
+                <input type="text" id="staffId" placeholder="Enter your Staff ID" required>
+            </div>
+
+            <div class="form-group">
+                <label for="accessKey">Access Key</label>
+                <input type="password" id="accessKey" placeholder="Enter your Access Key" required>
+            </div>
+
+            <button type="submit" class="login-btn">Login to Dashboard</button>
+
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+
+        <div class="credentials-info">
+            <strong>Demo Credentials:</strong>
+            Staff ID: ADMIN_01<br>
+            Access Key: restro2026
+        </div>
+    </div>
+
+    <script>
+        const VALID_STAFF_ID = 'ADMIN_01';
+        const VALID_ACCESS_KEY = 'restro2026';
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const staffId = document.getElementById('staffId').value.trim();
+            const accessKey = document.getElementById('accessKey').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (staffId === VALID_STAFF_ID && accessKey === VALID_ACCESS_KEY) {
+                sessionStorage.setItem('isAdminLoggedIn', 'true');
+                window.location.href = 'admin_sales.html';
+            } else {
+                errorMessage.textContent = 'Invalid credentials. Please try again.';
+                errorMessage.classList.add('show');
+                document.getElementById('staffId').value = '';
+                document.getElementById('accessKey').value = '';
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
+

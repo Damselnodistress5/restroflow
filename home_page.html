@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -21,6 +21,7 @@
       background:var(--bg);
       color:var(--text);
       line-height:1.6;
+      background-image: url(pic1.jpeg);
     }
 
     /* Transparent Header */
@@ -48,7 +49,7 @@
     }
 
     .nav-left{ display:flex; align-items:center; gap:12px; }
-    .nav-right{ display:flex; align-items:center; gap:20px; }
+    .nav-right{ display:flex; align-items:center; gap:15px; }
 
     .hamburger{
       width:40px; height:36px; display:inline-flex; align-items:center; justify-content:center;
@@ -59,18 +60,20 @@
     .hamburger .bar::before{ top:-7px; }
     .hamburger .bar::after{ top:7px; }
 
-    .auth-btn{ 
+    .auth-btn{
       text-decoration: none;
-      padding:10px 24px; 
-      border-radius:99px; 
-      border:1.5px solid var(--primary); 
-      background:transparent; 
+      padding:10px 20px;
+      border-radius:99px;
+      border:1.5px solid var(--primary);
+      background:transparent;
       color:var(--primary);
-      cursor:pointer; 
-      font-weight:700; 
+      cursor:pointer;
+      font-weight:700;
       transition: 0.3s;
+      font-size: 0.85rem;
     }
     .auth-btn.primary{ background:var(--primary); color:#fff; border:0; }
+    .auth-btn.staff-link { border-color: #666; color: #666; }
     .auth-btn:hover{ transform: scale(1.05); opacity: 0.9; }
 
     .hero{
@@ -79,8 +82,8 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      /* Dark overlay + your local image file */
-      background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+      /* Using a relative path for your background image */
+      background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
                   url('pic1.jpeg');
       background-size: cover;
       background-position: center;
@@ -119,6 +122,43 @@
     }
     .btn-main:hover{ transform: translateY(-3px); box-shadow: 0 15px 30px rgba(130, 108, 215, 0.4); }
 
+    .auth-modal-overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      padding: 20px;
+    }
+    .auth-modal-overlay.show{ display: flex; }
+    .auth-modal{
+      background: var(--white);
+      color: var(--text);
+      width: 100%;
+      max-width: 420px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      padding: 24px;
+      text-align: center;
+    }
+    .auth-modal h3{
+      margin: 0 0 8px;
+      font-size: 1.5rem;
+    }
+    .auth-modal p{
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .auth-actions{
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
     /* Side Menu */
     .menu-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.5); opacity:0; pointer-events:none; transition:0.3s; z-index: 1000;}
     .menu-overlay.show{ opacity:1; pointer-events:auto; }
@@ -142,6 +182,8 @@
 
     @media (max-width: 768px) {
       .hero h2{ font-size: 2.5rem; }
+      .nav-right { gap: 8px; }
+      .auth-btn { padding: 8px 12px; font-size: 0.75rem; }
     }
   </style>
 </head>
@@ -157,6 +199,7 @@
         </div>
 
         <div class="nav-right">
+          <a class="auth-btn staff-link" href="admin_login.html">Staff Portal</a>
           <a class="auth-btn" href="login.html">Log in</a>
           <a class="auth-btn primary" href="signup.html">Join Us</a>
         </div>
@@ -177,6 +220,7 @@
     <a href="billing.html">Quick Pay</a>
     <a href="feedback.html">Give Feedback</a>
     <a href="raise_query.html">Support</a>
+    <a href="admin_login.html" style="color: var(--primary); margin-top: auto; border-top: 1px solid #eee;">Admin Dashboard</a>
   </aside>
 
   <main>
@@ -185,10 +229,21 @@
         <p>Experience the Art of Dining</p>
         <h2>Exquisite Flavors,<br>Unforgettable Memories.</h2>
         <br>
-        <a href="dine.html" class="btn-main">Start Your Experience</a>
+        <a href="#" id="startExperienceBtn" class="btn-main">Start Your Experience</a>
       </div>
     </section>
   </main>
+
+  <div id="authModalOverlay" class="auth-modal-overlay">
+    <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <h3 id="authModalTitle">Continue to RestroFlow</h3>
+      <p>Please log in or create an account to start your experience.</p>
+      <div class="auth-actions">
+        <a class="auth-btn" href="login.html">Log in</a>
+        <a class="auth-btn primary" href="signup.html">Sign up</a>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <div class="container">
@@ -202,6 +257,8 @@
     const sideMenu = document.getElementById('sideMenu');
     const overlay = document.getElementById('menuOverlay');
     const closeBtn = document.getElementById('menuClose');
+    const startExperienceBtn = document.getElementById('startExperienceBtn');
+    const authModalOverlay = document.getElementById('authModalOverlay');
 
     function openMenu(){
       sideMenu.classList.add('show'); overlay.classList.add('show');
@@ -211,16 +268,36 @@
       sideMenu.classList.remove('show'); overlay.classList.remove('show');
       document.body.style.overflow = '';
     }
+    function openAuthModal(){
+      authModalOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeAuthModal(){
+      authModalOverlay.classList.remove('show');
+      if (!sideMenu.classList.contains('show')) {
+        document.body.style.overflow = '';
+      }
+    }
 
     hamburger.addEventListener('click', openMenu);
     overlay.addEventListener('click', closeMenu);
     closeBtn.addEventListener('click', closeMenu);
+    startExperienceBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      openAuthModal();
+    });
+    authModalOverlay.addEventListener('click', function(e){
+      if (e.target === authModalOverlay) closeAuthModal();
+    });
 
-    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){
+        closeMenu();
+        closeAuthModal();
+      }
+    });
   })();
 </script>
 
 </body>
 </html>
-
-
