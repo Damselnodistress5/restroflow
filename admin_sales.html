@@ -250,7 +250,7 @@
         <div class="kpi-container">
             <div class="kpi-card">
                 <h3>Total Lifetime Revenue</h3>
-                <div class="value" id="totalRevenue">$0.00</div>
+                <div class="value" id="totalRevenue">Rs 0.00</div>
             </div>
             <div class="kpi-card">
                 <h3>Total Orders</h3>
@@ -296,7 +296,7 @@
 
                 if (orders.length === 0) {
                     tableBody.innerHTML = '<tr><td colspan="6" class="empty-message">No sales data available yet.</td></tr>';
-                    document.getElementById('totalRevenue').textContent = '$0.00';
+                    document.getElementById('totalRevenue').textContent = 'Rs 0.00';
                     document.getElementById('totalOrders').textContent = '0';
                     return;
                 }
@@ -312,16 +312,16 @@
                         <td>${order.table_name || 'N/A'}</td>
                         <td>${order.customer_name || 'Guest'}</td>
                         <td>${order.customer_phone || order.customer_email || 'N/A'}</td>
-                        <td>$${grandTotal.toFixed(2)}</td>
+                        <td>Rs ${grandTotal.toFixed(2)}</td>
                     `;
                     tableBody.appendChild(row);
                 });
 
-                document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+                document.getElementById('totalRevenue').textContent = `Rs ${totalRevenue.toFixed(2)}`;
                 document.getElementById('totalOrders').textContent = orders.length.toString();
             } catch (err) {
                 tableBody.innerHTML = '<tr><td colspan="6" class="empty-message">Unable to load sales data.</td></tr>';
-                document.getElementById('totalRevenue').textContent = '$0.00';
+                document.getElementById('totalRevenue').textContent = 'Rs 0.00';
                 document.getElementById('totalOrders').textContent = '0';
             }
         }

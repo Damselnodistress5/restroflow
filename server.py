@@ -2,6 +2,7 @@ import json
 import os
 import sqlite3
 import time
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -9,6 +10,7 @@ from urllib.parse import parse_qs, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "restroflow.sqlite3"
+IST = timezone(timedelta(hours=5, minutes=30))
 
 
 def hash_password(raw: str) -> str:
@@ -16,11 +18,11 @@ def hash_password(raw: str) -> str:
 
 
 def now_ts() -> str:
-    return time.strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def code(prefix: str) -> str:
-    return f"{prefix}{int(time.time() * 1000)}"
+    return f"{prefix}{int(datetime.now(IST).timestamp() * 1000)}"
 
 
 def db_conn():

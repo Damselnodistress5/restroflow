@@ -200,8 +200,9 @@
 
         <div class="nav-right">
           <a class="auth-btn staff-link" href="admin_login.html">Staff Portal</a>
-          <a class="auth-btn" href="login.html">Log in</a>
-          <a class="auth-btn primary" href="signup.html">Join Us</a>
+          <a class="auth-btn" id="loginBtn" href="login.html">Log in</a>
+          <a class="auth-btn primary" id="signupBtn" href="signup.html">Join Us</a>
+          <button class="auth-btn" id="logoutBtn" style="display:none;">Logout</button>
         </div>
       </nav>
     </div>
@@ -220,6 +221,7 @@
     <a href="billing.html">Quick Pay</a>
     <a href="feedback.html">Give Feedback</a>
     <a href="raise_query.html">Support</a>
+    <a href="#" id="sideLogoutBtn" style="display:none;">Logout</a>
     <a href="admin_login.html" style="color: var(--primary); margin-top: auto; border-top: 1px solid #eee;">Admin Dashboard</a>
   </aside>
 
@@ -259,6 +261,35 @@
     const closeBtn = document.getElementById('menuClose');
     const startExperienceBtn = document.getElementById('startExperienceBtn');
     const authModalOverlay = document.getElementById('authModalOverlay');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const sideLogoutBtn = document.getElementById('sideLogoutBtn');
+
+    function isLoggedIn(){
+      try {
+        return Boolean(JSON.parse(localStorage.getItem('current_user') || 'null'));
+      } catch (err) {
+        return false;
+      }
+    }
+    function syncAuthUI(){
+      const loggedIn = isLoggedIn();
+      loginBtn.style.display = loggedIn ? 'none' : 'inline-block';
+      signupBtn.style.display = loggedIn ? 'none' : 'inline-block';
+      logoutBtn.style.display = loggedIn ? 'inline-block' : 'none';
+      sideLogoutBtn.style.display = loggedIn ? 'block' : 'none';
+    }
+    function logoutUser(){
+      localStorage.removeItem('current_user');
+      localStorage.removeItem('current_order_code');
+      localStorage.removeItem('current_cart');
+      localStorage.removeItem('current_order_notes');
+      localStorage.removeItem('last_paid_order_code');
+      syncAuthUI();
+      closeMenu();
+      closeAuthModal();
+    }
 
     function openMenu(){
       sideMenu.classList.add('show'); overlay.classList.add('show');
@@ -284,7 +315,16 @@
     closeBtn.addEventListener('click', closeMenu);
     startExperienceBtn.addEventListener('click', function(e){
       e.preventDefault();
-      openAuthModal();
+      if (isLoggedIn()) {
+        window.location.href = 'dine.html';
+      } else {
+        openAuthModal();
+      }
+    });
+    logoutBtn.addEventListener('click', logoutUser);
+    sideLogoutBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      logoutUser();
     });
     authModalOverlay.addEventListener('click', function(e){
       if (e.target === authModalOverlay) closeAuthModal();
@@ -296,6 +336,7 @@
         closeAuthModal();
       }
     });
+    syncAuthUI();
   })();
 </script>
 
