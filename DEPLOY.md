@@ -12,6 +12,8 @@
 - Build command: `pip install -r requirements.txt`
 - Start command: `python server.py`
 - Environment variable: `HOST=0.0.0.0`
+- Persistent disk mount path: `/var/data`
+- Environment variable: `DB_PATH=/var/data/restroflow.sqlite3`
 
 ## Option 2: Railway
 1. Push this repo to GitHub.

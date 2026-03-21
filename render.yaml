@@ -4,6 +4,11 @@ services:
     runtime: python
     buildCommand: "pip install -r requirements.txt"
     startCommand: "python server.py"
+    disks:
+      - name: data
+        mountPath: /var/data
     envVars:
       - key: HOST
         value: 0.0.0.0
+      - key: DB_PATH
+        value: /var/data/restroflow.sqlite3

@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "restroflow.sqlite3"
+DB_PATH = Path(os.environ.get("DB_PATH", str(BASE_DIR / "restroflow.sqlite3"))).resolve()
 IST = timezone(timedelta(hours=5, minutes=30))
 
 
@@ -26,9 +26,62 @@ def code(prefix: str) -> str:
 
 
 def db_conn():
-    conn = sqlite3.connect(DB_PATH)
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA synchronous = NORMAL")
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
+
+
+def compute_payment_summary(cur, order_id: int, coupon_code: str = "") -> dict:
+    cur.execute("SELECT COALESCE(SUM(quantity * unit_price), 0) AS subtotal FROM order_items WHERE order_id = ?", (order_id,))
+    subtotal = float(cur.fetchone()["subtotal"])
+
+    discount = 0.0
+    applied_coupon = ""
+    coupon_type = ""
+    coupon_value = 0.0
+    normalized = (coupon_code or "").strip().upper()
+    if normalized:
+        cur.execute(
+            """
+            SELECT coupon_code,
+                   COALESCE(discount_type, 'percent') AS discount_type,
+                   COALESCE(discount_value, discount_percent, 0) AS discount_value
+            FROM coupons
+            WHERE UPPER(coupon_code) = ? AND is_active = 1
+            LIMIT 1
+            """,
+            (normalized,),
+        )
+        c = cur.fetchone()
+        if c:
+            applied_coupon = c["coupon_code"]
+            coupon_type = (c["discount_type"] or "percent").strip().lower()
+            coupon_value = float(c["discount_value"] or 0)
+            if coupon_type == "flat":
+                discount = min(subtotal, round(max(coupon_value, 0), 2))
+            else:
+                discount = round(subtotal * (max(coupon_value, 0) / 100.0), 2)
+
+    net = max(0.0, subtotal - discount)
+    cgst = round(net * 0.025, 2)
+    sgst = round(net * 0.025, 2)
+    total = round(net + cgst + sgst, 2)
+    return {
+        "subtotal": subtotal,
+        "discountAmount": discount,
+        "cgstAmount": cgst,
+        "sgstAmount": sgst,
+        "grandTotal": total,
+        "couponApplied": bool(applied_coupon),
+        "appliedCoupon": applied_coupon,
+        "couponType": coupon_type,
+        "couponValue": coupon_value,
+    }
 
 
 def init_db():
@@ -73,6 +126,8 @@ def init_db():
           coupon_id INTEGER PRIMARY KEY AUTOINCREMENT,
           coupon_code TEXT NOT NULL UNIQUE,
           discount_percent REAL NOT NULL,
+          discount_type TEXT NOT NULL DEFAULT 'percent',
+          discount_value REAL,
           is_active INTEGER NOT NULL DEFAULT 1
         );
 
@@ -144,7 +199,32 @@ def init_db():
         );
         """
     )
-    cur.execute("INSERT OR IGNORE INTO coupons (coupon_code, discount_percent, is_active) VALUES ('SAVE10', 10, 1)")
+    cur.execute("PRAGMA table_info(coupons)")
+    coupon_cols = {r["name"] for r in cur.fetchall()}
+    if "discount_type" not in coupon_cols:
+        cur.execute("ALTER TABLE coupons ADD COLUMN discount_type TEXT NOT NULL DEFAULT 'percent'")
+    if "discount_value" not in coupon_cols:
+        cur.execute("ALTER TABLE coupons ADD COLUMN discount_value REAL")
+    cur.execute("UPDATE coupons SET discount_type='percent' WHERE discount_type IS NULL OR TRIM(discount_type) = ''")
+    cur.execute("UPDATE coupons SET discount_value=discount_percent WHERE discount_value IS NULL")
+    cur.execute(
+        """
+        INSERT OR IGNORE INTO coupons (coupon_code, discount_percent, discount_type, discount_value, is_active)
+        VALUES ('SAVE10', 10, 'percent', 10, 1)
+        """
+    )
+    cur.execute(
+        """
+        INSERT OR IGNORE INTO coupons (coupon_code, discount_percent, discount_type, discount_value, is_active)
+        VALUES ('VEG100', 0, 'flat', 100, 1)
+        """
+    )
+    cur.execute(
+        """
+        INSERT OR IGNORE INTO coupons (coupon_code, discount_percent, discount_type, discount_value, is_active)
+        VALUES ('FREEDESSERT', 0, 'flat', 50, 1)
+        """
+    )
     cur.execute("INSERT OR IGNORE INTO menu_categories (category_name) VALUES ('Uncategorized')")
     conn.commit()
     conn.close()
@@ -200,7 +280,7 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/orders.php":
             action = (qs.get("action", [""])[0]).strip()
-            if action != "bill":
+            if action not in ["bill", "summary"]:
                 self._json(404, {"ok": False, "message": "Unknown action"})
                 return
             order_code = (qs.get("order_code", [""])[0]).strip()
@@ -209,26 +289,40 @@ class Handler(BaseHTTPRequestHandler):
                 return
             conn = db_conn()
             cur = conn.cursor()
-            cur.execute(
-                """
-                SELECT o.order_id, o.order_code, o.created_at, o.status,
-                       COALESCE(t.table_code, 'Takeaway') AS table_name,
-                       mi.item_name, oi.quantity, oi.unit_price,
-                       (oi.quantity * oi.unit_price) AS line_total
-                FROM orders o
-                LEFT JOIN dining_tables t ON t.table_id = o.table_id
-                JOIN order_items oi ON oi.order_id = o.order_id
-                JOIN menu_items mi ON mi.item_id = oi.item_id
-                WHERE o.order_code = ?
-                """,
-                (order_code,),
-            )
-            rows = [dict(r) for r in cur.fetchall()]
-            conn.close()
-            if not rows:
+
+            if action == "bill":
+                cur.execute(
+                    """
+                    SELECT o.order_id, o.order_code, o.created_at, o.status,
+                           COALESCE(t.table_code, 'Takeaway') AS table_name,
+                           mi.item_name, oi.quantity, oi.unit_price,
+                           (oi.quantity * oi.unit_price) AS line_total
+                    FROM orders o
+                    LEFT JOIN dining_tables t ON t.table_id = o.table_id
+                    JOIN order_items oi ON oi.order_id = o.order_id
+                    JOIN menu_items mi ON mi.item_id = oi.item_id
+                    WHERE o.order_code = ?
+                    """,
+                    (order_code,),
+                )
+                rows = [dict(r) for r in cur.fetchall()]
+                conn.close()
+                if not rows:
+                    self._json(404, {"ok": False, "message": "Order not found"})
+                else:
+                    self._json(200, {"ok": True, "bill": rows})
+                return
+
+            coupon = (qs.get("coupon_code", [""])[0] or "").strip()
+            cur.execute("SELECT order_id FROM orders WHERE order_code = ? LIMIT 1", (order_code,))
+            row = cur.fetchone()
+            if not row:
+                conn.close()
                 self._json(404, {"ok": False, "message": "Order not found"})
             else:
-                self._json(200, {"ok": True, "bill": rows})
+                summary = compute_payment_summary(cur, int(row["order_id"]), coupon)
+                conn.close()
+                self._json(200, {"ok": True, "summary": summary})
             return
 
         if path == "/api/admin/sales.php":
@@ -528,7 +622,7 @@ class Handler(BaseHTTPRequestHandler):
                 try:
                     order_code = (body.get("order_code") or "").strip()
                     method = (body.get("payment_method") or "").strip()
-                    coupon = (body.get("coupon_code") or "").strip()
+                    coupon = (body.get("coupon_code") or "").strip().upper()
                     if not order_code or method not in ["upi", "card", "cash"]:
                         self._json(400, {"ok": False, "message": "Invalid payment payload"})
                         return
@@ -540,21 +634,12 @@ class Handler(BaseHTTPRequestHandler):
                         return
                     order_id = row["order_id"]
 
-                    cur.execute("SELECT COALESCE(SUM(quantity * unit_price), 0) AS subtotal FROM order_items WHERE order_id = ?", (order_id,))
-                    subtotal = float(cur.fetchone()["subtotal"])
-
-                    discount_percent = 0.0
-                    if coupon:
-                        cur.execute("SELECT discount_percent FROM coupons WHERE coupon_code = ? AND is_active = 1 LIMIT 1", (coupon,))
-                        c = cur.fetchone()
-                        if c:
-                            discount_percent = float(c["discount_percent"]) / 100.0
-
-                    discount = round(subtotal * discount_percent, 2)
-                    net = subtotal - discount
-                    cgst = round(net * 0.025, 2)
-                    sgst = round(net * 0.025, 2)
-                    total = round(net + cgst + sgst, 2)
+                    summary = compute_payment_summary(cur, int(order_id), coupon)
+                    subtotal = summary["subtotal"]
+                    discount = summary["discountAmount"]
+                    cgst = summary["cgstAmount"]
+                    sgst = summary["sgstAmount"]
+                    total = summary["grandTotal"]
 
                     cur.execute("SELECT payment_id FROM payments WHERE order_id = ? LIMIT 1", (order_id,))
                     pay = cur.fetchone()
@@ -584,11 +669,13 @@ class Handler(BaseHTTPRequestHandler):
                             "ok": True,
                             "message": "Payment successful",
                             "summary": {
-                                "subtotal": subtotal,
-                                "discountAmount": discount,
-                                "cgstAmount": cgst,
-                                "sgstAmount": sgst,
-                                "grandTotal": total,
+                                "subtotal": summary["subtotal"],
+                                "discountAmount": summary["discountAmount"],
+                                "cgstAmount": summary["cgstAmount"],
+                                "sgstAmount": summary["sgstAmount"],
+                                "grandTotal": summary["grandTotal"],
+                                "couponApplied": summary["couponApplied"],
+                                "appliedCoupon": summary["appliedCoupon"],
                                 "paymentMethod": method,
                             },
                         },

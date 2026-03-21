@@ -168,9 +168,9 @@
   <script>
     (function () {
       let currentGrandTotal = 0;
-      let appliedDiscountPercent = 0;
       let selectedPaymentMethod = "";
       const currentOrderCode = localStorage.getItem("current_order_code") || "";
+      const activeCoupon = (localStorage.getItem("active_coupon") || "").trim().toUpperCase();
       const CGST_RATE = 0.025;
       const SGST_RATE = 0.025;
 
@@ -188,19 +188,41 @@
         perPersonCost.textContent = `Rs ${perPerson} per person`;
       }
 
+      async function fetchServerSummary(subtotal) {
+        if (!currentOrderCode) {
+          const discountAmount = 0;
+          const taxable = subtotal - discountAmount;
+          return {
+            subtotal,
+            discountAmount,
+            cgstAmount: Number((taxable * CGST_RATE).toFixed(2)),
+            sgstAmount: Number((taxable * SGST_RATE).toFixed(2)),
+            grandTotal: Number((taxable * (1 + CGST_RATE + SGST_RATE)).toFixed(2)),
+            couponApplied: false,
+            appliedCoupon: ""
+          };
+        }
+        const qs = new URLSearchParams({
+          action: "summary",
+          order_code: currentOrderCode
+        });
+        if (activeCoupon) {
+          qs.set("coupon_code", activeCoupon);
+        }
+        const res = await fetch(`/api/orders.php?${qs.toString()}`);
+        const data = await res.json();
+        if (!res.ok || !data.ok || !data.summary) {
+          throw new Error(data.message || "Unable to calculate bill summary");
+        }
+        return data.summary;
+      }
+
       async function loadBillData() {
         const fallbackCart = JSON.parse(localStorage.getItem("current_cart") || "[]");
         const fallbackTable = localStorage.getItem("current_table") || "Takeaway";
         const orderNotes = localStorage.getItem("current_order_notes") || "";
-        const activeCoupon = localStorage.getItem("active_coupon");
         let uiItems = [];
         let tableName = fallbackTable;
-
-        if (activeCoupon === "SAVE10") {
-          appliedDiscountPercent = 0.1;
-          document.getElementById("appliedDiscountText").style.display = "block";
-          document.getElementById("discountRow").style.display = "flex";
-        }
 
         if (currentOrderCode) {
           try {
@@ -264,15 +286,36 @@
           container.appendChild(row);
         });
 
-        const discountAmount = Number((subtotal * appliedDiscountPercent).toFixed(2));
-        const subtotalAfterDiscount = subtotal - discountAmount;
-        const cgst = Number((subtotalAfterDiscount * CGST_RATE).toFixed(2));
-        const sgst = Number((subtotalAfterDiscount * SGST_RATE).toFixed(2));
-        currentGrandTotal = Number((subtotalAfterDiscount + cgst + sgst).toFixed(2));
+        let summary;
+        try {
+          summary = await fetchServerSummary(subtotal);
+        } catch (_err) {
+          summary = {
+            subtotal,
+            discountAmount: 0,
+            cgstAmount: Number((subtotal * CGST_RATE).toFixed(2)),
+            sgstAmount: Number((subtotal * SGST_RATE).toFixed(2)),
+            grandTotal: Number((subtotal * (1 + CGST_RATE + SGST_RATE)).toFixed(2)),
+            couponApplied: false,
+            appliedCoupon: ""
+          };
+        }
+
+        const discountAmount = Number(summary.discountAmount || 0);
+        const cgst = Number(summary.cgstAmount || 0);
+        const sgst = Number(summary.sgstAmount || 0);
+        currentGrandTotal = Number(summary.grandTotal || 0);
 
         document.getElementById("subtotal").textContent = `Rs ${subtotal.toFixed(2)}`;
         if (discountAmount > 0) {
+          document.getElementById("appliedDiscountText").textContent =
+            summary.appliedCoupon ? `Coupon ${summary.appliedCoupon} Applied!` : "Discount Applied!";
+          document.getElementById("appliedDiscountText").style.display = "block";
+          document.getElementById("discountRow").style.display = "flex";
           document.getElementById("discountAmount").textContent = `-Rs ${discountAmount.toFixed(2)}`;
+        } else {
+          document.getElementById("appliedDiscountText").style.display = "none";
+          document.getElementById("discountRow").style.display = "none";
         }
         document.getElementById("cgst").textContent = `Rs ${cgst.toFixed(2)}`;
         document.getElementById("sgst").textContent = `Rs ${sgst.toFixed(2)}`;
@@ -325,7 +368,7 @@
 
         overlay.classList.add("show");
         try {
-          const couponCode = localStorage.getItem("active_coupon") || null;
+          const couponCode = (localStorage.getItem("active_coupon") || "").trim().toUpperCase() || null;
           const res = await fetch('/api/orders.php?action=pay', {
             method: "POST",
             headers: { "Content-Type": "application/json" },
