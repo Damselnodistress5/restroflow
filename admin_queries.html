@@ -172,6 +172,25 @@
             color: #666;
         }
 
+        .ticket-status {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .ticket-status.pending {
+            background-color: #fff3e0;
+            color: #8a5a00;
+        }
+
+        .ticket-status.resolved {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+        }
+
         .ticket-subject {
             color: #333;
             font-weight: 600;
@@ -197,6 +216,12 @@
         .ticket-date {
             font-size: 12px;
             color: #999;
+        }
+
+        .ticket-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .resolve-btn {
@@ -288,7 +313,7 @@
             ticketsContainer.innerHTML = '<div class="empty-message">Loading tickets...</div>';
 
             try {
-                const res = await fetch('/api/admin/queries.php?status=pending');
+                const res = await fetch('/api/admin/queries.php?status=all');
                 const data = await res.json();
                 if (!res.ok || !data.ok) {
                     throw new Error(data.message || 'Failed to load tickets');
@@ -305,6 +330,8 @@
                 queries.forEach((query) => {
                     const ticket = document.createElement('div');
                     ticket.className = 'ticket';
+                    const status = (query.status || 'pending').toLowerCase();
+                    const canResolve = status !== 'resolved';
                     ticket.innerHTML = `
                         <div class="ticket-header">
                             <span class="ticket-id">Ticket #${query.query_code || query.query_id}</span>
@@ -315,7 +342,10 @@
                         <div class="ticket-message">${query.description || 'No message provided'}</div>
                         <div class="ticket-footer">
                             <span class="ticket-date">${query.date || 'Date not recorded'}</span>
-                            <button class="resolve-btn" onclick="resolveTicket(${query.query_id})">Mark Resolved</button>
+                            <div class="ticket-actions">
+                                <span class="ticket-status ${status}">${status}</span>
+                                ${canResolve ? `<button class="resolve-btn" onclick="resolveTicket(${query.query_id})">Mark Resolved</button>` : ''}
+                            </div>
                         </div>
                     `;
                     ticketsContainer.appendChild(ticket);
