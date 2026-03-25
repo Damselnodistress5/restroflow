@@ -244,9 +244,17 @@ class Handler(BaseHTTPRequestHandler):
         if not length:
             return {}
         raw = self.rfile.read(length).decode("utf-8")
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype == "application/x-www-form-urlencoded":
+            parsed = parse_qs(raw, keep_blank_values=True)
+            return {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
         try:
             return json.loads(raw) if raw else {}
         except json.JSONDecodeError:
+            # Fallback: some clients omit/incorrectly set content-type while sending key=value body.
+            parsed = parse_qs(raw, keep_blank_values=True)
+            if parsed:
+                return {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
             return {}
 
     def _serve_file(self, path: Path):
